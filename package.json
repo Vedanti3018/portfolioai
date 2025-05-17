@@ -16,6 +16,7 @@
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
     "axios": "^1.4.0",
+    "canvas": "^3.1.0",
     "date-fns": "^2.30.0",
     "docx": "^8.0.4",
     "framer-motion": "^10.12.18",
