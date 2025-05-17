@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
   // Refresh session if expired - required for Server Components
   await supabase.auth.getSession()
   
-  // Check if user is authenticated for protected routes
+  // Optional: Check if user is authenticated for protected routes
   const { data: { session } } = await supabase.auth.getSession()
   
   // Define protected routes that require authentication
@@ -29,33 +29,6 @@ export async function middleware(request: NextRequest) {
   // If already logged in and trying to access login/signup, redirect to dashboard
   if ((request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup') && session) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-  
-  // Check if user needs to complete onboarding
-  // Only check for protected routes and not for the onboarding page itself
-  if (session && isProtectedRoute && !request.nextUrl.pathname.startsWith('/onboarding')) {
-    try {
-      // Check if the user has a resume or LinkedIn profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('linkedin_url')
-        .eq('id', session.user.id)
-        .single()
-      
-      const { data: resumes } = await supabase
-        .from('resumes')
-        .select('id')
-        .eq('user_id', session.user.id)
-        .limit(1)
-      
-      // If user has neither a LinkedIn URL nor a resume, redirect to onboarding
-      if ((!profile?.linkedin_url && (!resumes || resumes.length === 0))) {
-        return NextResponse.redirect(new URL('/onboarding', request.url))
-      }
-    } catch (error) {
-      console.error('Error checking profile completion:', error)
-      // Continue with the request even if there's an error checking profile
-    }
   }
   
   return response

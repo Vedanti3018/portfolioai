@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import MainLayout from '@/components/layout/MainLayout'
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -13,19 +15,66 @@ export default function LoginPage() {
 
   const handleEmailLogin = async () => {
     setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error, data } = await supabase.auth.signInWithPassword({ email, password })
+    
+    if (!error && data.user) {
+      // Check if user needs to complete onboarding
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('linkedin_url')
+          .eq('id', data.user.id)
+          .single()
+        
+        const { data: resumes } = await supabase
+          .from('resumes')
+          .select('id')
+          .eq('user_id', data.user.id)
+          .limit(1)
+        
+        // If user has neither a LinkedIn URL nor a resume, redirect to onboarding
+        if ((!profile?.linkedin_url && (!resumes || resumes.length === 0))) {
+          router.push('/onboarding');
+        } else {
+          router.push('/dashboard');
+        }
+      } catch (error) {
+        console.error('Error checking profile completion:', error)
+        // Default to dashboard if there's an error
+        router.push('/dashboard');
+      }
+    } else if (error) {
+      setMessage(error.message);
+    }
+    
     setLoading(false)
-    setMessage(error ? error.message : 'Logged in!')
   }
 
   const handleGoogleLogin = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      },
-    })
-    if (error) setMessage(error.message)
+    try {
+      setLoading(true);
+      const { error, data } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/api/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+      
+      if (error) {
+        console.error('Google login error:', error);
+        setMessage(error.message);
+      }
+      // Note: We don't need to redirect here as the OAuth flow will handle that
+    } catch (err: any) {
+      console.error('Unexpected error during Google login:', err);
+      setMessage(err.message || 'Failed to connect with Google');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import MainLayout from '@/components/layout/MainLayout'
 
 export default function SignupPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -25,30 +27,49 @@ export default function SignupPage() {
     }
 
     setLoading(true)
-    const { error } = await supabase.auth.signUp({ 
-      email, 
+    const { error, data } = await supabase.auth.signUp({
+      email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`
+        emailRedirectTo: `${window.location.origin}/onboarding`,
       }
     })
-    setLoading(false)
     
-    if (error) {
-      setMessage(error.message)
-    } else {
-      setMessage('Check your email for the confirmation link!')
+    if (!error && data.user) {
+      // After signup, redirect directly to onboarding
+      router.push('/onboarding');
+    } else if (error) {
+      setMessage(error.message);
     }
+    
+    setLoading(false)
   }
 
   const handleGoogleLogin = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      },
-    })
-    if (error) setMessage(error.message)
+    try {
+      setLoading(true);
+      const { error, data } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/api/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+      
+      if (error) {
+        console.error('Google login error:', error);
+        setMessage(error.message);
+      }
+      // Note: We don't need to redirect here as the OAuth flow will handle that
+    } catch (err: any) {
+      console.error('Unexpected error during Google login:', err);
+      setMessage(err.message || 'Failed to connect with Google');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
