@@ -12,9 +12,10 @@ import Image from "next/image";
 
 const MotionCard = motion(Card);
 
-const LoginPage: React.FC = () => {
+const SignUpPage: React.FC = () => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState(""); // Added password state
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -33,10 +34,16 @@ const LoginPage: React.FC = () => {
   const validateEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const handleEmailLogin = async () => {
+  const handleEmailSignUp = async () => {
     setLoading(true);
     setErrorMsg("");
     setSuccessMsg("");
+
+    if (!name.trim()) {
+      setErrorMsg("Please enter your name.");
+      setLoading(false);
+      return;
+    }
 
     if (!validateEmail(email)) {
       setErrorMsg("Please enter a valid email.");
@@ -44,22 +51,30 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    if (!password) {
-      setErrorMsg("Please enter your password.");
+    if (password.length < 6) {
+      setErrorMsg("Password must be at least 6 characters.");
       setLoading(false);
       return;
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data,error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      },
     });
 
     if (error) {
-      setErrorMsg(error.message);
-    } else if (data.session) {
-      router.push("/dashboard");
-    }
+        if (error.message.includes("already registered")) {
+          setErrorMsg("Email already exists. Please login instead.");
+        } else {
+          setErrorMsg(error.message);
+        }
+      } else if (data.user) {
+        setSuccessMsg("Signup successful! Please check your email to confirm.");
+        // Optional: Automatically redirect after delay or when user confirms email
+      }
 
     setLoading(false);
   };
@@ -93,19 +108,11 @@ const LoginPage: React.FC = () => {
         transition={{ duration: 0.4 }}
       >
         <CardContent className="p-8 space-y-6 text-white">
-  <div className="text-center space-y-2">
-    <Image src="/logo.svg" alt="Brand Logo" width={48} height={48} className="mx-auto" />
-    <h2 className="text-2xl font-semibold">Welcome Back</h2>
-    <p className="text-sm text-gray-400">
-      Log in to PortfolioAI  OR  {" "}
-      <span
-        className="text-gray-400 underline cursor-pointer hover:text-gray-400"
-        onClick={() => router.push("/signup")}
-      >
-        Create account
-      </span>
-    </p>
-  </div>
+          <div className="text-center space-y-2">
+            <Image src="/logo.svg" alt="Brand Logo" width={48} height={48} className="mx-auto" />
+            <h2 className="text-2xl font-semibold">Welcome to PortfolioAI</h2>
+            <p className="text-sm text-gray-400">Create your AI-powered career kit</p>
+          </div>
 
           <Button
             variant="outline"
@@ -125,6 +132,13 @@ const LoginPage: React.FC = () => {
 
           <div className="space-y-3">
             <Input
+              type="text"
+              placeholder="Your name"
+              className="bg-[#2a2a2a] border border-gray-700 text-white placeholder-gray-400"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <Input
               type="email"
               placeholder="Your email"
               className="bg-[#2a2a2a] border border-gray-700 text-white placeholder-gray-400"
@@ -138,16 +152,19 @@ const LoginPage: React.FC = () => {
               className="bg-[#2a2a2a] border border-gray-700 text-white placeholder-gray-400"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
+              autoComplete="new-password"
+              
             />
+
             {errorMsg && <p className="text-sm text-red-500 text-center">{errorMsg}</p>}
             {successMsg && <p className="text-sm text-green-500 text-center">{successMsg}</p>}
+
             <Button
               className="w-full bg-gray-100 text-black hover:bg-white"
-              onClick={handleEmailLogin}
+              onClick={handleEmailSignUp}
               disabled={loading}
             >
-              {loading ? "Logging in..." : "Continue with Email"}
+              {loading ? "Creating account..." : "Sign up"}
             </Button>
           </div>
 
@@ -162,4 +179,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default SignUpPage;
