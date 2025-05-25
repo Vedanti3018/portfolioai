@@ -1,7 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove the experimental turbo option that was causing issues
-  // Next.js 14+ uses a different configuration approach
-}
+  reactStrictMode: true,
+  images: {
+    domains: ['example.com'], // Add any external image domains here
+  },
+  experimental: {
+    // enable if needed
+    // appDir: true,
+  },
+};
 
 module.exports = nextConfig;
