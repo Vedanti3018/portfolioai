@@ -228,7 +228,7 @@ export default function ManualEntryPage() {
         .upsert({
           id: session.user.id,
           parsed_data: resumeData,
-          created_at: new Date().toISOString()
+          updated_at: new Date().toISOString()
         });
 
       if (draftError) {

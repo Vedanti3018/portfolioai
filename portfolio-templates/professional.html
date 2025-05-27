@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{name}} - Portfolio</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1>{{name}}</h1>
+            <p class="title">{{title}}</p>
+            <div class="contact-info">
+                <p><i class="fas fa-envelope"></i> {{email}}</p>
+                <p><i class="fas fa-phone"></i> {{phone}}</p>
+                <p><i class="fas fa-map-marker-alt"></i> {{country}}</p>
+            </div>
+            <div class="social-links">
+                {{#if linkedin}}
+                <a href="{{linkedin}}" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                {{/if}}
+                {{#if github}}
+                <a href="{{github}}" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+                {{/if}}
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="about">
+            <h2>About Me</h2>
+            <p>{{description}}</p>
+        </section>
+
+        <section class="skills">
+            <h2>Skills</h2>
+            <div class="skills-container">
+                <div class="technical-skills">
+                    <h3>Technical Skills</h3>
+                    <ul>
+                        {{#each skills.technical_skills}}
+                        <li>{{this}}</li>
+                        {{/each}}
+                    </ul>
+                </div>
+                <div class="soft-skills">
+                    <h3>Soft Skills</h3>
+                    <ul>
+                        {{#each skills.soft_skills}}
+                        <li>{{this}}</li>
+                        {{/each}}
+                    </ul>
+                </div>
+                <div class="languages">
+                    <h3>Languages</h3>
+                    <ul>
+                        {{#each skills.languages}}
+                        <li>{{this}}</li>
+                        {{/each}}
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="experience">
+            <h2>Professional Experience</h2>
+            {{#each experience}}
+            <div class="experience-item">
+                <h3>{{company}}</h3>
+                <p class="position">{{position}}</p>
+                <p class="date">{{start_date}} - {{end_date}}</p>
+                <p class="description">{{description}}</p>
+            </div>
+            {{/each}}
+        </section>
+
+        <section class="education">
+            <h2>Education</h2>
+            {{#each education}}
+            <div class="education-item">
+                <h3>{{institution}}</h3>
+                <p class="degree">{{degree}} in {{field_of_study}}</p>
+                <p class="date">{{start_date}} - {{end_date}}</p>
+                <p class="description">{{description}}</p>
+            </div>
+            {{/each}}
+        </section>
+
+        <section class="projects">
+            <h2>Projects</h2>
+            {{#each projects}}
+            <div class="project-item">
+                <h3>{{name}}</h3>
+                <p class="date">{{start_date}} - {{end_date}}</p>
+                <p class="description">{{description}}</p>
+                {{#if url}}
+                <a href="{{url}}" target="_blank">View Project <i class="fas fa-external-link-alt"></i></a>
+                {{/if}}
+            </div>
+            {{/each}}
+        </section>
+
+        <section class="certifications">
+            <h2>Certifications</h2>
+            {{#each certifications}}
+            <div class="certification-item">
+                <h3>{{name}}</h3>
+                <p class="issuer">Issued by: {{issuer}}</p>
+                <p class="date">Date: {{date}}</p>
+                {{#if url}}
+                <a href="{{url}}" target="_blank">View Certificate <i class="fas fa-external-link-alt"></i></a>
+                {{/if}}
+            </div>
+            {{/each}}
+        </section>
+
+        {{#if testimonials}}
+        <section class="testimonials">
+            <h2>Testimonials</h2>
+            {{#each testimonials}}
+            <div class="testimonial-item">
+                <div class="testimonial-header">
+                    <img src="{{photo}}" alt="{{name}}" class="testimonial-photo">
+                    <div class="testimonial-info">
+                        <h3>{{name}}</h3>
+                        <p class="date">{{date}}</p>
+                        <div class="rating">
+                            {{#times rating}}★{{/times}}
+                            {{#times (subtract 5 rating)}}☆{{/times}}
+                        </div>
+                    </div>
+                </div>
+                <p class="testimonial-text">{{text}}</p>
+            </div>
+            {{/each}}
+        </section>
+        {{/if}}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; {{currentYear}} {{name}}. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html> 

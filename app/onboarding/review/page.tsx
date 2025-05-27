@@ -252,8 +252,8 @@ export default function ReviewPage() {
         hasOnboarded: true,
         onboarding_completed: true,
         updated_at: new Date().toISOString(),
-        full_name: resumeData.basic_info.name || '',
-        email: resumeData.basic_info.email || '',
+        // full_name: resumeData.basic_info.name || '',
+        // email: resumeData.basic_info.email || '',
         linkedin_url: resumeData.professional_info.linkedin_url || '',
         resume_url: resumeData.professional_info.resume_url || '',
         onboarding_method: 'cv_upload'

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{name}} - Portfolio</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;700&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #7c3aed;
+      --secondary: #4c1d95;
+      --accent: #fbbf24;
+      --background: #181828;
+      --surface: #232346;
+      --text: #e0e0e0;
+      --text-secondary: #a0a0a0;
+    }
+
+    body {
+      background: var(--background);
+      color: var(--text);
+      font-family: 'Fira Sans', 'Noto Sans', sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    header {
+      text-align: center;
+      padding: 3rem 0;
+      background: var(--surface);
+      margin-bottom: 3rem;
+    }
+
+    h1 {
+      color: var(--primary);
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .title {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+    }
+
+    h2 {
+      color: var(--accent);
+      font-size: 1.8rem;
+      margin: 2rem 0 1rem;
+    }
+
+    h3 {
+      color: var(--primary);
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    section {
+      background: var(--surface);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      background: var(--background);
+      padding: 0.5rem 1rem;
+      margin-bottom: 0.5rem;
+      border-radius: 4px;
+    }
+
+    .contact-info, .skills-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .social-links a {
+      color: var(--text);
+      font-size: 1.5rem;
+      transition: color 0.3s;
+    }
+
+    .social-links a:hover {
+      color: var(--primary);
+    }
+
+    .experience-item,
+    .education-item,
+    .project-item,
+    .certification-item,
+    .testimonial-item {
+      margin-bottom: 1.5rem;
+    }
+
+    .testimonial-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .testimonial-photo {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .testimonial-name {
+      color: var(--primary);
+      margin: 0;
+    }
+
+    .testimonial-rating {
+      color: var(--accent);
+    }
+
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>{{name}}</h1>
+      <p class="title">{{title}}</p>
+      <div class="contact-info">
+        <p><i class="fas fa-envelope"></i> {{email}}</p>
+        <p><i class="fas fa-phone"></i> {{phone}}</p>
+        <p><i class="fas fa-map-marker-alt"></i> {{country}}</p>
+      </div>
+      <div class="social-links">
+        {{#if linkedin}}
+        <a href="{{linkedin}}" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+        {{/if}}
+        {{#if github}}
+        <a href="{{github}}" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+        {{/if}}
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="about">
+      <h2>About Me</h2>
+      <p>{{description}}</p>
+    </section>
+
+    <section class="skills">
+      <h2>Skills</h2>
+      <div class="skills-container">
+        <div>
+          <h3>Technical Skills</h3>
+          <ul>
+            {{#each skills.technical_skills}}
+            <li>{{this}}</li>
+            {{/each}}
+          </ul>
+        </div>
+        <div>
+          <h3>Soft Skills</h3>
+          <ul>
+            {{#each skills.soft_skills}}
+            <li>{{this}}</li>
+            {{/each}}
+          </ul>
+        </div>
+        <div>
+          <h3>Languages</h3>
+          <ul>
+            {{#each skills.languages}}
+            <li>{{this}}</li>
+            {{/each}}
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="experience">
+      <h2>Professional Experience</h2>
+      {{#each experience}}
+      <div class="experience-item">
+        <h3>{{company}}</h3>
+        <p class="position">{{position}}</p>
+        <p class="date">{{start_date}} - {{end_date}}</p>
+        <p class="description">{{description}}</p>
+      </div>
+      {{/each}}
+    </section>
+
+    <section class="education">
+      <h2>Education</h2>
+      {{#each education}}
+      <div class="education-item">
+        <h3>{{institution}}</h3>
+        <p class="degree">{{degree}} in {{field_of_study}}</p>
+        <p class="date">{{start_date}} - {{end_date}}</p>
+        <p class="description">{{description}}</p>
+      </div>
+      {{/each}}
+    </section>
+
+    <section class="projects">
+      <h2>Projects</h2>
+      {{#each projects}}
+      <div class="project-item">
+        <h3>{{name}}</h3>
+        <p class="date">{{start_date}} - {{end_date}}</p>
+        <p class="description">{{description}}</p>
+        {{#if url}}
+        <a href="{{url}}" target="_blank">View Project <i class="fas fa-external-link-alt"></i></a>
+        {{/if}}
+      </div>
+      {{/each}}
+    </section>
+
+    <section class="certifications">
+      <h2>Certifications</h2>
+      {{#each certifications}}
+      <div class="certification-item">
+        <h3>{{name}}</h3>
+        <p class="issuer">Issued by: {{issuer}}</p>
+        <p class="date">Date: {{date}}</p>
+        {{#if url}}
+        <a href="{{url}}" target="_blank">View Certificate <i class="fas fa-external-link-alt"></i></a>
+        {{/if}}
+      </div>
+      {{/each}}
+    </section>
+
+    {{#if testimonials}}
+    <section class="testimonials">
+      <h2>Testimonials</h2>
+      {{#each testimonials}}
+      <div class="testimonial-item">
+        <div class="testimonial-header">
+          <img src="{{photo}}" alt="{{name}}" class="testimonial-photo">
+          <div>
+            <h3 class="testimonial-name">{{name}}</h3>
+            <p class="date">{{date}}</p>
+            <div class="testimonial-rating">
+              {{#times rating}}★{{/times}}{{#times (subtract 5 rating)}}☆{{/times}}
+            </div>
+          </div>
+        </div>
+        <p class="testimonial-text">{{text}}</p>
+      </div>
+      {{/each}}
+    </section>
+    {{/if}}
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; {{currentYear}} {{name}}. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

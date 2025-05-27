@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{name}} - Portfolio</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <header class="header">
+        <div class="container">
+            <div class="profile-card">
+                <div class="profile-image">
+                    <div class="image-placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+                <h1>{{name}}</h1>
+                <p class="title">{{title}}</p>
+                <div class="contact-info">
+                    <p><i class="fas fa-envelope"></i> {{email}}</p>
+                    <p><i class="fas fa-phone"></i> {{phone}}</p>
+                    <p><i class="fas fa-map-marker-alt"></i> {{country}}</p>
+                </div>
+                <div class="social-links">
+                    {{#if linkedin}}
+                    <a href="{{linkedin}}" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    {{/if}}
+                    {{#if github}}
+                    <a href="{{github}}" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="about">
+            <h2>About Me</h2>
+            <div class="about-content">
+                <p>{{description}}</p>
+            </div>
+        </section>
+
+        <section class="skills">
+            <h2>Skills</h2>
+            <div class="skills-container">
+                <div class="skill-card technical-skills">
+                    <h3><i class="fas fa-code"></i> Technical Skills</h3>
+                    <ul>
+                        {{#each skills.technical_skills}}
+                        <li>{{this}}</li>
+                        {{/each}}
+                    </ul>
+                </div>
+                <div class="skill-card soft-skills">
+                    <h3><i class="fas fa-users"></i> Soft Skills</h3>
+                    <ul>
+                        {{#each skills.soft_skills}}
+                        <li>{{this}}</li>
+                        {{/each}}
+                    </ul>
+                </div>
+                <div class="skill-card languages">
+                    <h3><i class="fas fa-language"></i> Languages</h3>
+                    <ul>
+                        {{#each skills.languages}}
+                        <li>{{this}}</li>
+                        {{/each}}
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="experience">
+            <h2>Professional Experience</h2>
+            <div class="timeline">
+                {{#each experience}}
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h3>{{company}}</h3>
+                        <p class="position">{{position}}</p>
+                        <p class="date">{{start_date}} - {{end_date}}</p>
+                        <p class="description">{{description}}</p>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+        </section>
+
+        <section class="education">
+            <h2>Education</h2>
+            <div class="education-grid">
+                {{#each education}}
+                <div class="education-card">
+                    <div class="education-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h3>{{institution}}</h3>
+                    <p class="degree">{{degree}} in {{field_of_study}}</p>
+                    <p class="date">{{start_date}} - {{end_date}}</p>
+                    <p class="description">{{description}}</p>
+                </div>
+                {{/each}}
+            </div>
+        </section>
+
+        <section class="projects">
+            <h2>Projects</h2>
+            <div class="projects-grid">
+                {{#each projects}}
+                <div class="project-card">
+                    <div class="project-header">
+                        <h3>{{name}}</h3>
+                        <p class="date">{{start_date}} - {{end_date}}</p>
+                    </div>
+                    <p class="description">{{description}}</p>
+                    {{#if url}}
+                    <a href="{{url}}" target="_blank" class="project-link">
+                        View Project <i class="fas fa-external-link-alt"></i>
+                    </a>
+                    {{/if}}
+                </div>
+                {{/each}}
+            </div>
+        </section>
+
+        <section class="certifications">
+            <h2>Certifications</h2>
+            <div class="certifications-grid">
+                {{#each certifications}}
+                <div class="certification-card">
+                    <div class="certification-icon">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <h3>{{name}}</h3>
+                    <p class="issuer">Issued by: {{issuer}}</p>
+                    <p class="date">Date: {{date}}</p>
+                    {{#if url}}
+                    <a href="{{url}}" target="_blank" class="certification-link">
+                        View Certificate <i class="fas fa-external-link-alt"></i>
+                    </a>
+                    {{/if}}
+                </div>
+                {{/each}}
+            </div>
+        </section>
+
+        {{#if testimonials}}
+        <section class="testimonials">
+            <h2>Testimonials</h2>
+            <div class="testimonials-slider">
+                {{#each testimonials}}
+                <div class="testimonial-card">
+                    <div class="testimonial-header">
+                        <img src="{{photo}}" alt="{{name}}" class="testimonial-photo">
+                        <div class="testimonial-info">
+                            <h3>{{name}}</h3>
+                            <p class="date">{{date}}</p>
+                            <div class="rating">
+                                {{#times rating}}★{{/times}}
+                                {{#times (subtract 5 rating)}}☆{{/times}}
+                            </div>
+                        </div>
+                    </div>
+                    <p class="testimonial-text">{{text}}</p>
+                </div>
+                {{/each}}
+            </div>
+        </section>
+        {{/if}}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; {{currentYear}} {{name}}. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Custom cursor effect
+        const cursor = document.querySelector('.cursor');
+        const cursorFollower = document.querySelector('.cursor-follower');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            
+            setTimeout(() => {
+                cursorFollower.style.left = e.clientX + 'px';
+                cursorFollower.style.top = e.clientY + 'px';
+            }, 100);
+        });
+
+        // Add hover effect to interactive elements
+        const interactiveElements = document.querySelectorAll('a, button, .project-card, .education-card, .certification-card');
+        interactiveElements.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursor.classList.add('active');
+                cursorFollower.classList.add('active');
+            });
+            el.addEventListener('mouseleave', () => {
+                cursor.classList.remove('active');
+                cursorFollower.classList.remove('active');
+            });
+        });
+    </script>
+</body>
+</html> 

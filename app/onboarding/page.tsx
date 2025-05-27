@@ -29,8 +29,21 @@ export default function OnboardingPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        toast.error('You must be logged in to upload a resume');
         router.push('/login');
         return;
+      }
+
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error('Please upload a PDF or Word document');
+      }
+
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        throw new Error('File size must be less than 5MB');
       }
 
       const formData = new FormData();
@@ -42,7 +55,8 @@ export default function OnboardingPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to parse resume');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to parse resume');
       }
 
       const data = await response.json();
@@ -56,16 +70,19 @@ export default function OnboardingPage() {
         .upsert({
           id: session.user.id,
           parsed_data: data.data,
-          created_at: new Date().toISOString()
+          updated_at: new Date().toISOString()
         });
 
-      if (draftError) throw draftError;
+      if (draftError) {
+        throw new Error(`Failed to save draft: ${draftError.message}`);
+      }
 
       toast.success('Resume uploaded successfully!');
       router.push('/onboarding/review');
     } catch (error) {
       console.error('Error uploading file:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to upload resume');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload resume';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +133,7 @@ export default function OnboardingPage() {
                 onClick={() => setSelectedMethod('manual')}
               >
                 <PenLine size={20} />
-                Enter Manually
+                Answer short QnA
               </Button>
             </div>
           ) : selectedMethod === 'upload' ? (

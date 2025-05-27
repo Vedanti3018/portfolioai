@@ -1,0 +1,96 @@
+@import 'ats-base.css';
+
+:root {
+  --accent-color: #666666;
+}
+
+/* Minimal template specific styles */
+.header {
+  margin-bottom: var(--spacing-xl);
+}
+
+.name {
+  font-size: var(--font-size-2xl);
+  font-weight: 300;
+  letter-spacing: 1px;
+}
+
+.title {
+  font-weight: 400;
+  color: var(--accent-color);
+}
+
+.contact-info {
+  margin-top: var(--spacing-md);
+}
+
+.contact-item {
+  color: var(--accent-color);
+}
+
+.section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.section-title {
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent-color);
+  border-bottom: none;
+  margin-bottom: var(--spacing-lg);
+}
+
+.item {
+  margin-bottom: var(--spacing-xl);
+}
+
+.item-header {
+  margin-bottom: var(--spacing-sm);
+}
+
+.item-title {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.item-subtitle {
+  color: var(--accent-color);
+  font-weight: 400;
+}
+
+.item-date {
+  color: var(--accent-color);
+  font-size: var(--font-size-sm);
+  font-weight: 300;
+}
+
+.item-description {
+  color: var(--text-secondary);
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.skill-item {
+  background: none;
+  border: none;
+  padding: 0;
+  font-weight: 300;
+  color: var(--text-secondary);
+}
+
+.skill-item::after {
+  content: '•';
+  margin-left: var(--spacing-md);
+  color: var(--accent-color);
+}
+
+.skill-item:last-child::after {
+  content: '';
+} 
