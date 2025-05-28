@@ -89,20 +89,21 @@ export default function DocsPage() {
       {/* Main Content */}
       <div className="pt-40 pb-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            style={{ display: 'block' }}
-            className="text-center mb-32"
-          >
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-              Documentation
-            </h1>
-            <p className="text-xl sm:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-              Everything you need to know about using OlioAI effectively.
-            </p>
-          </motion.div>
+          <div className="text-center mb-32">
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              style={{ display: 'block' }}
+            >
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+                Documentation
+              </h1>
+              <p className="text-xl sm:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                Everything you need to know about using OlioAI effectively.
+              </p>
+            </motion.div>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar */}
@@ -129,29 +130,30 @@ export default function DocsPage() {
 
             {/* Content */}
             <div className="lg:col-span-3">
-              <motion.div
-                key={activeSection}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3 }}
-                style={{ display: 'block' }}
-                className="bg-zinc-900 rounded-2xl p-8 border border-white/10"
-              >
-                <h2 className="text-2xl font-semibold mb-6">
-                  {sections.find(s => s.id === activeSection)?.title}
-                </h2>
-                <p className="text-lg text-gray-300 leading-relaxed mb-8">
-                  {sections.find(s => s.id === activeSection)?.content}
-                </p>
-                <Button
-                  variant="outline"
-                  className="border-white/20 text-white hover:bg-white/10"
-                  onClick={() => window.location.href = '/signup'}
+              <div className="bg-zinc-900 rounded-2xl p-8 border border-white/10">
+                <motion.div
+                  key={activeSection}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3 }}
+                  style={{ display: 'block' }}
                 >
-                  Learn More
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </motion.div>
+                  <h2 className="text-2xl font-semibold mb-6">
+                    {sections.find(s => s.id === activeSection)?.title}
+                  </h2>
+                  <p className="text-lg text-gray-300 leading-relaxed mb-8">
+                    {sections.find(s => s.id === activeSection)?.content}
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="border-white/20 text-white hover:bg-white/10"
+                    onClick={() => window.location.href = '/signup'}
+                  >
+                    Learn More
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </motion.div>
+              </div>
             </div>
           </div>
         </div>

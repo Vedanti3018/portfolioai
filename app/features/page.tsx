@@ -97,88 +97,86 @@ export default function FeaturesPage() {
       {/* Hero Section */}
       <div className="pt-40 pb-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            style={{ display: 'block' }}
-            className="text-center mb-32"
-          >
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-              Powerful Features for Your Career
-            </h1>
-            <p className="text-xl sm:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-              Everything you need to build your professional presence and land your dream job.
-            </p>
-          </motion.div>
+          <div className="text-center mb-32">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              style={{ display: 'block' }}
+            >
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+                Powerful Features for Your Career
+              </h1>
+              <p className="text-xl sm:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                Everything you need to build your professional presence and land your dream job.
+              </p>
+            </motion.div>
+          </div>
 
           {/* Features Grid */}
           <div className="space-y-24">
             {features.map((feature, index) => (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                style={{ display: 'block' }}
-                className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${
-                  index % 2 === 1 ? 'lg:grid-flow-dense' : ''
-                }`}
+                className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${index % 2 === 1 ? 'lg:grid-flow-dense' : ''}`}
               >
-                <motion.div 
-                  className={index % 2 === 1 ? 'lg:col-start-2' : ''}
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="bg-zinc-900 rounded-2xl p-8 border border-white/10 hover:border-white/20 transition-colors">
-                    <div className="mb-6">{feature.icon}</div>
-                    <h2 className="text-2xl font-semibold mb-4">{feature.title}</h2>
-                    <p className="text-lg text-gray-300 leading-relaxed mb-6">
-                      {feature.description}
-                    </p>
-                    <Button
-                      className="bg-white text-black hover:bg-gray-100 border-none"
-                      onClick={() => window.location.href = '/signup'}
-                    >
-                      Learn More
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
-                  </div>
-                </motion.div>
-                <motion.div 
-                  className={`relative h-[400px] ${index % 2 === 1 ? 'lg:col-start-1' : ''}`}
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Image
-                    src={feature.image}
-                    alt={feature.title}
-                    fill
-                    className="object-cover rounded-2xl"
-                  />
-                </motion.div>
-              </motion.div>
+                <div className={index % 2 === 1 ? 'lg:col-start-2' : ''}>
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="bg-zinc-900 rounded-2xl p-8 border border-white/10 hover:border-white/20 transition-colors">
+                      <div className="mb-6">{feature.icon}</div>
+                      <h2 className="text-2xl font-semibold mb-4">{feature.title}</h2>
+                      <p className="text-lg text-gray-300 leading-relaxed mb-6">
+                        {feature.description}
+                      </p>
+                      <Button
+                        className="bg-white text-black hover:bg-gray-100 border-none"
+                        onClick={() => window.location.href = '/signup'}
+                      >
+                        Learn More
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                      </Button>
+                    </div>
+                  </motion.div>
+                </div>
+                <div className={`relative h-[400px] ${index % 2 === 1 ? 'lg:col-start-1' : ''}`}>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Image
+                      src={feature.image}
+                      alt={feature.title}
+                      fill
+                      className="object-cover rounded-2xl"
+                    />
+                  </motion.div>
+                </div>
+              </div>
             ))}
           </div>
 
           {/* Final CTA */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.8 }}
-            style={{ display: 'block' }}
-            className="text-center mt-32"
-          >
-            <h2 className="text-2xl font-semibold mb-6">Ready to transform your career?</h2>
-            <Button
-              size="lg"
-              className="bg-white text-black hover:bg-gray-100 px-10 py-6 text-lg"
-              onClick={() => window.location.href = '/signup'}
+          <div className="text-center mt-32">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.8 }}
+              style={{ display: 'block' }}
             >
-              Get Started for Free
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </motion.div>
+              <h2 className="text-2xl font-semibold mb-6">Ready to transform your career?</h2>
+              <Button
+                size="lg"
+                className="bg-white text-black hover:bg-gray-100 px-10 py-6 text-lg"
+                onClick={() => window.location.href = '/signup'}
+              >
+                Get Started for Free
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </motion.div>
+          </div>
         </div>
       </div>
     </div>

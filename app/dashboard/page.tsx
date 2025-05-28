@@ -31,19 +31,19 @@ const features = [
   {
     title: 'AI Portfolio Builder',
     description: 'Generates a responsive, host-ready site from your inputs.',
-    image: '/images/portfolio-builder.png',
+    image: '/images/port.png',
     link: '/dashboard/portfolio'
   },
   {
     title: 'AI CV Generator',
     description: 'Creates ATS-friendly PDF/docx résumés.',
-    image: '/images/resume-generator.png',
+    image: '/images/resum.png',
     link: '/dashboard/resume'
   },
   {
     title: 'AI Cover-Letter Writer',
     description: 'One-click, job-specific letters tailored to your data.',
-    image: '/images/cover-letter-writer.png',
+    image: '/images/cover.png',
     link: '/dashboard/cover-letters'
   },
   {
@@ -133,37 +133,6 @@ export default function DashboardPage() {
               </Link>
             ))}
           </div>
-        </section>
-
-        {/* Portfolio Generation Button */}
-        <section className="mb-12">
-          <h2 className="text-xl font-semibold mb-6">Portfolio Actions</h2>
-          <Button
-            className="bg-blue-600 text-white hover:bg-blue-700 font-semibold px-6 py-3 rounded-md"
-            onClick={async () => {
-              try {
-                const response = await fetch('/api/generate-portfolio');
-                if (!response.ok) {
-                  const errorData = await response.json();
-                  throw new Error(errorData.error || 'Failed to generate portfolio');
-                }
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'portfolio.zip';
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                toast.success('Portfolio downloaded successfully!');
-              } catch (error) {
-                console.error('Error downloading portfolio:', error);
-                toast.error(error instanceof Error ? error.message : 'Failed to download portfolio');
-              }
-            }}
-          >
-            Generate and Download Portfolio
-          </Button>
         </section>
 
         {/* AI Interview Section */}

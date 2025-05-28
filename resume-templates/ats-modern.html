@@ -3,42 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{name}} - Resume</title>
-    <link rel="stylesheet" href="ats-modern.css">
+    <title>ATS Modern Resume</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #000000;
+            --secondary-color: #333333;
+            --accent-color: #666666;
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --border-color: #dddddd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: var(--bg-color);
+            padding: 2rem;
+            max-width: 8.5in;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .header h1 {
+            font-size: 24pt;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-info {
+            font-size: 10pt;
+            color: var(--secondary-color);
+        }
+
+        .contact-info a {
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+
+        .section {
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 14pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1rem;
+            padding-bottom: 0.25rem;
+        }
+
+        .summary {
+            font-size: 11pt;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .skills-list {
+            list-style: none;
+            font-size: 11pt;
+        }
+
+        .skills-list li {
+            margin-bottom: 0.5rem;
+        }
+
+        .skills-list strong {
+            font-weight: 500;
+        }
+
+        .experience-item, .education-item {
+            margin-bottom: 1rem;
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+
+        .item-title {
+            font-weight: 500;
+            font-size: 11pt;
+        }
+
+        .item-subtitle {
+            font-style: italic;
+            color: var(--secondary-color);
+            font-size: 10pt;
+        }
+
+        .item-date {
+            font-size: 10pt;
+            color: var(--accent-color);
+        }
+
+        .item-description {
+            font-size: 10pt;
+            margin-top: 0.5rem;
+        }
+
+        .item-description ul {
+            list-style-type: disc;
+            margin-left: 1.5rem;
+            margin-top: 0.25rem;
+        }
+
+        .item-description li {
+            margin-bottom: 0.25rem;
+        }
+
+        .certifications-list {
+            list-style: none;
+            font-size: 11pt;
+        }
+
+        .certifications-list li {
+            margin-bottom: 0.5rem;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1 class="name">{{name}}</h1>
-            <div class="title">{{title}}</div>
-            <div class="contact-info">
-                <div class="contact-item">{{email}}</div>
-                <div class="contact-item">{{phone}}</div>
-                <div class="contact-item">{{location}}</div>
+    <div class="header">
+        <h1>{{content.personal.name}}</h1>
+        <div class="contact-info">
+            {{content.personal.phone}} | 
+            <a href="mailto:{{content.personal.email}}">{{content.personal.email}}</a> | 
+            {{content.personal.location}}
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Summary</div>
+        <div class="summary">{{content.personal.summary}}</div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Technical Skills</div>
+        <ul class="skills-list">
+            {{#each content.skills}}
+            <li>{{this}}</li>
+            {{/each}}
+        </ul>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Experience</div>
+        {{#each content.experience}}
+        <div class="experience-item">
+            <div class="item-header">
+                <div>
+                    <div class="item-title">{{position}}</div>
+                    <div class="item-subtitle">{{company}}</div>
+                </div>
+                <div class="item-date">{{startDate}} - {{endDate}}</div>
             </div>
-        </header>
+            <div class="item-description">{{description}}</div>
+        </div>
+        {{/each}}
+    </div>
 
-        <section class="section">
-            <h2 class="section-title">Professional Summary</h2>
-            <p>{{summary}}</p>
-        </section>
-
-        <section class="section">
-            <h2 class="section-title">Experience</h2>
-            {{experience}}
-        </section>
-
-        <section class="section">
-            <h2 class="section-title">Education</h2>
-            {{education}}
-        </section>
-
-        <section class="section">
-            <h2 class="section-title">Skills</h2>
-            <div class="skills-list">
-                {{skills}}
+    <div class="section">
+        <div class="section-title">Education</div>
+        {{#each content.education}}
+        <div class="education-item">
+            <div class="item-header">
+                <div>
+                    <div class="item-title">{{degree}} in {{field}}</div>
+                    <div class="item-subtitle">{{school}}</div>
+                </div>
+                <div class="item-date">{{startDate}} - {{endDate}}</div>
             </div>
-        </section>
+        </div>
+        {{/each}}
     </div>
 </body>
 </html> 

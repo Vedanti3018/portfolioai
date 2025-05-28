@@ -3,3 +3,6 @@ requests==2.31.0
 groq==0.4.2 
 pdfplumber
 dotenv
+textract
+python-docx
+pip<24.1

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { spawn } from 'child_process';
 import path from 'path';
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
   try {
     const data = await request.json();
     const { resumeData, jobTitle, industry } = data;
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     });
 
     // Handle process completion
-    return new Promise((resolve, reject) => {
+    return await new Promise<Response>((resolve) => {
       pythonProcess.on('close', (code) => {
         // Clean up temporary file
         try {

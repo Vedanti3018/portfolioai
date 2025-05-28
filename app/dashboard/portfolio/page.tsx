@@ -18,43 +18,43 @@ const templates = [
     id: 'tech-developer',
     name: 'Tech Developer',
     description: 'Modern tech-focused design with code-inspired elements and interactive features',
-    thumbnail: '/templates/tech-developer.png',
+    thumbnail: '/images/tech.png',
     colors: ['#1a365d', '#2c5282', '#4299e1', '#63b3ed']
   },
   {
     id: 'minimalist',
     name: 'Minimalist',
     description: 'Clean and minimal design with earthy tones and subtle animations',
-    thumbnail: '/templates/minimalist.png',
-    colors: ['#E6D5AC', '#7D9F7D', '#A67C52', '#D4A76A']
+    thumbnail: '/images/minimal.png',
+    colors: ['#D4A76A', '#7D9F7D', '#A67C52','#E6D5AC']
   },
   {
     id: 'creative',
     name: 'Creative',
     description: 'Artistic design with gradient backgrounds and creative elements',
-    thumbnail: '/templates/creative-professional.png',
-    colors: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#2C3E50']
+    thumbnail: '/images/create.png',
+    colors: ['#FF6B6B', '#4ECDC4', '#2C3E50','#FFE66D']
   },
   {
     id: 'professional',
     name: 'Professional',
     description: 'Modern black and white design for a clean, professional look',
-    thumbnail: '/templates/professional.png',
+    thumbnail: '/images/profess.png',
     colors: ['#2c3e50', '#34495e', '#e74c3c', '#7f8c8d']
   },
   {
     id: 'cyberpunk',
     name: 'Cyberpunk',
     description: 'Bold neon colors on dark background for a tech-forward look',
-    thumbnail: '/templates/cyberpunk.png',
+    thumbnail: '/images/cyber.png',
     colors: ['#000000', '#00FF00', '#FF00FF', '#00FFFF']
   },
   {
     id: 'dark',
     name: 'Dark',
     description: 'Elegant dark theme with modern typography and subtle highlights',
-    thumbnail: '/templates/dark.png',
-    colors: ['#7c3aed', '#4c1d95', '#fbbf24', '#181828']
+    thumbnail: '/images/dark.png',
+    colors: ['#7c3aed', '#4c1d95', '#181828','#fbbf24']
   }
 ];
 
@@ -113,7 +113,7 @@ export default function PortfolioPage() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white p-8 pt-24">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-center items-center mb-8">
           <h1 className="text-3xl font-bold">Choose Your Portfolio Template</h1>
         </div>
 
@@ -126,7 +126,7 @@ export default function PortfolioPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <div className="relative h-48 w-full overflow-hidden">
+              <div className="relative h-48 w-full overflow-hidden text-white">
                 <Image
                   src={template.thumbnail}
                   alt={template.name}
@@ -136,7 +136,12 @@ export default function PortfolioPage() {
               </div>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-semibold">{template.name}</CardTitle>
+                <CardTitle
+                  className="text-xl font-semibold"
+                  style={{ color: template.colors[template.colors.length - 1] }}
+                >
+                  {template.name}
+                </CardTitle>
                   <div className="flex gap-1">
                     {template.colors.map((color, index) => (
                       <div

@@ -11,13 +11,13 @@ const features = [
     icon: '🎨',
     title: 'AI Portfolio Builder',
     description: 'Auto-generates a stunning, fully-hosted site with your skills, projects, and achievements — no design skills needed.',
-    image: '/images/portfolio-builder.png'
+    image: '/images/port.png'
   },
   {
     icon: '📄',
     title: 'Résumé & Cover Letter Generator',
     description: 'One-click, ATS-optimized documents tailored to each job description.',
-    image: '/images/resume-generator.png'
+    image: '/images/resum.png'
   },
   {
     icon: '💡',

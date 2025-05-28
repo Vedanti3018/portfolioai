@@ -6,7 +6,10 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { motion } from 'framer-motion';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Save, Download } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Loader2, Save, Download, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ResumeData {
@@ -69,6 +72,12 @@ export default function ResumePreviewPage({ params }: { params: Promise<{ templa
   const [saving, setSaving] = useState(false);
   const [resumeData, setResumeData] = useState<ResumeData>(defaultResumeData);
   const [error, setError] = useState<string | null>(null);
+  const [expandedSections, setExpandedSections] = useState({
+    personal: true,
+    experience: true,
+    education: true,
+    skills: true
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -184,6 +193,118 @@ export default function ResumePreviewPage({ params }: { params: Promise<{ templa
     }
   };
 
+  const handlePersonalInfoChange = (field: keyof ResumeData['content']['personal'], value: string) => {
+    setResumeData(prev => ({
+      ...prev,
+      content: {
+        ...prev.content,
+        personal: {
+          ...prev.content.personal,
+          [field]: value
+        }
+      }
+    }));
+  };
+
+  const handleExperienceChange = (index: number, field: string, value: string) => {
+    setResumeData(prev => ({
+      ...prev,
+      content: {
+        ...prev.content,
+        experience: prev.content.experience.map((exp, i) => 
+          i === index ? { ...exp, [field]: value } : exp
+        )
+      }
+    }));
+  };
+
+  const addExperience = () => {
+    setResumeData(prev => ({
+      ...prev,
+      content: {
+        ...prev.content,
+        experience: [
+          ...prev.content.experience,
+          {
+            company: '',
+            position: '',
+            startDate: '',
+            endDate: '',
+            description: ''
+          }
+        ]
+      }
+    }));
+  };
+
+  const removeExperience = (index: number) => {
+    setResumeData(prev => ({
+      ...prev,
+      content: {
+        ...prev.content,
+        experience: prev.content.experience.filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  const handleEducationChange = (index: number, field: string, value: string) => {
+    setResumeData(prev => ({
+      ...prev,
+      content: {
+        ...prev.content,
+        education: prev.content.education.map((edu, i) => 
+          i === index ? { ...edu, [field]: value } : edu
+        )
+      }
+    }));
+  };
+
+  const addEducation = () => {
+    setResumeData(prev => ({
+      ...prev,
+      content: {
+        ...prev.content,
+        education: [
+          ...prev.content.education,
+          {
+            school: '',
+            degree: '',
+            field: '',
+            startDate: '',
+            endDate: ''
+          }
+        ]
+      }
+    }));
+  };
+
+  const removeEducation = (index: number) => {
+    setResumeData(prev => ({
+      ...prev,
+      content: {
+        ...prev.content,
+        education: prev.content.education.filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  const handleSkillsChange = (skills: string) => {
+    setResumeData(prev => ({
+      ...prev,
+      content: {
+        ...prev.content,
+        skills: skills.split(',').map(skill => skill.trim()).filter(Boolean)
+      }
+    }));
+  };
+
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f] text-white">
@@ -249,7 +370,276 @@ export default function ResumePreviewPage({ params }: { params: Promise<{ templa
             <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
               Edit Resume
             </h2>
-            {/* Add your form components here */}
+            
+            <div className="space-y-6">
+              {/* Personal Information */}
+              <div className="space-y-4">
+                <button
+                  onClick={() => toggleSection('personal')}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <h3 className="text-lg font-medium text-white">Personal Information</h3>
+                  {expandedSections.personal ? (
+                    <ChevronUp className="h-5 w-5 text-white/60" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-white/60" />
+                  )}
+                </button>
+                {expandedSections.personal && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name" className="text-white">Full Name</Label>
+                      <Input
+                        id="name"
+                        value={resumeData.content.personal.name}
+                        onChange={(e) => handlePersonalInfoChange('name', e.target.value)}
+                        className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="title" className="text-white">Professional Title</Label>
+                      <Input
+                        id="title"
+                        value={resumeData.content.personal.title}
+                        onChange={(e) => handlePersonalInfoChange('title', e.target.value)}
+                        className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-white">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={resumeData.content.personal.email}
+                        onChange={(e) => handlePersonalInfoChange('email', e.target.value)}
+                        className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="text-white">Phone</Label>
+                      <Input
+                        id="phone"
+                        value={resumeData.content.personal.phone}
+                        onChange={(e) => handlePersonalInfoChange('phone', e.target.value)}
+                        className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="location" className="text-white">Location</Label>
+                      <Input
+                        id="location"
+                        value={resumeData.content.personal.location}
+                        onChange={(e) => handlePersonalInfoChange('location', e.target.value)}
+                        className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                      />
+                    </div>
+                  </div>
+                )}
+                {expandedSections.personal && (
+                  <div className="space-y-2">
+                    <Label htmlFor="summary" className="text-white">Professional Summary</Label>
+                    <Textarea
+                      id="summary"
+                      value={resumeData.content.personal.summary}
+                      onChange={(e) => handlePersonalInfoChange('summary', e.target.value)}
+                      className="bg-white/5 border-white/10 text-white placeholder:text-white/40 min-h-[100px]"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Experience */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <button
+                    onClick={() => toggleSection('experience')}
+                    className="flex items-center justify-between w-full text-left"
+                  >
+                    <h3 className="text-lg font-medium text-white">Experience</h3>
+                    {expandedSections.experience ? (
+                      <ChevronUp className="h-5 w-5 text-white/60" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5 text-white/60" />
+                    )}
+                  </button>
+                  {expandedSections.experience && (
+                    <Button
+                      onClick={addExperience}
+                      variant="ghost"
+                      className="text-white hover:text-white/80"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Experience
+                    </Button>
+                  )}
+                </div>
+                {expandedSections.experience && resumeData.content.experience.map((exp, index) => (
+                  <div key={index} className="space-y-4 p-4 border border-white/10 rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div className="grid grid-cols-2 gap-4 flex-1">
+                        <div className="space-y-2">
+                          <Label className="text-white">Position</Label>
+                          <Input
+                            value={exp.position}
+                            onChange={(e) => handleExperienceChange(index, 'position', e.target.value)}
+                            className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-white">Company</Label>
+                          <Input
+                            value={exp.company}
+                            onChange={(e) => handleExperienceChange(index, 'company', e.target.value)}
+                            className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-white">Start Date</Label>
+                          <Input
+                            value={exp.startDate}
+                            onChange={(e) => handleExperienceChange(index, 'startDate', e.target.value)}
+                            className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-white">End Date</Label>
+                          <Input
+                            value={exp.endDate}
+                            onChange={(e) => handleExperienceChange(index, 'endDate', e.target.value)}
+                            className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                          />
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => removeExperience(index)}
+                        variant="ghost"
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white">Description</Label>
+                      <Textarea
+                        value={exp.description}
+                        onChange={(e) => handleExperienceChange(index, 'description', e.target.value)}
+                        className="bg-white/5 border-white/10 text-white placeholder:text-white/40 min-h-[100px]"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Education */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <button
+                    onClick={() => toggleSection('education')}
+                    className="flex items-center justify-between w-full text-left"
+                  >
+                    <h3 className="text-lg font-medium text-white">Education</h3>
+                    {expandedSections.education ? (
+                      <ChevronUp className="h-5 w-5 text-white/60" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5 text-white/60" />
+                    )}
+                  </button>
+                  {expandedSections.education && (
+                    <Button
+                      onClick={addEducation}
+                      variant="ghost"
+                      className="text-white hover:text-white/80"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Education
+                    </Button>
+                  )}
+                </div>
+                {expandedSections.education && resumeData.content.education.map((edu, index) => (
+                  <div key={index} className="space-y-4 p-4 border border-white/10 rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div className="grid grid-cols-2 gap-4 flex-1">
+                        <div className="space-y-2">
+                          <Label className="text-white">School</Label>
+                          <Input
+                            value={edu.school}
+                            onChange={(e) => handleEducationChange(index, 'school', e.target.value)}
+                            className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-white">Degree</Label>
+                          <Input
+                            value={edu.degree}
+                            onChange={(e) => handleEducationChange(index, 'degree', e.target.value)}
+                            className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-white">Field of Study</Label>
+                          <Input
+                            value={edu.field}
+                            onChange={(e) => handleEducationChange(index, 'field', e.target.value)}
+                            className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-white">Start Date</Label>
+                            <Input
+                              value={edu.startDate}
+                              onChange={(e) => handleEducationChange(index, 'startDate', e.target.value)}
+                              className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-white">End Date</Label>
+                            <Input
+                              value={edu.endDate}
+                              onChange={(e) => handleEducationChange(index, 'endDate', e.target.value)}
+                              className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => removeEducation(index)}
+                        variant="ghost"
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Skills */}
+              <div className="space-y-4">
+                <button
+                  onClick={() => toggleSection('skills')}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <h3 className="text-lg font-medium text-white">Skills</h3>
+                  {expandedSections.skills ? (
+                    <ChevronUp className="h-5 w-5 text-white/60" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-white/60" />
+                  )}
+                </button>
+                {expandedSections.skills && (
+                  <div className="space-y-2">
+                    <Label className="text-white">Skills (comma-separated)</Label>
+                    <Textarea
+                      value={resumeData.content.skills.join(', ')}
+                      onChange={(e) => handleSkillsChange(e.target.value)}
+                      className="bg-white/5 border-white/10 text-white placeholder:text-white/40 min-h-[100px]"
+                      placeholder="e.g., JavaScript, React, Node.js, Python"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </Card>
 
           {/* Preview Panel */}
@@ -259,7 +649,7 @@ export default function ResumePreviewPage({ params }: { params: Promise<{ templa
             </h2>
             <div className="bg-white rounded-lg p-8">
               <iframe
-                src={`/api/preview-resume?templateId=${resolvedParams.templateId}`}
+                src={`/api/preview-resume?templateId=${resolvedParams.templateId}&resumeData=${encodeURIComponent(JSON.stringify(resumeData))}`}
                 className="w-full h-[800px] border-none"
                 title="Resume Preview"
               />

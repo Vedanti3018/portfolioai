@@ -1,1 +1,6 @@
-groq 
+groq
+textract==1.6.5
+python-magic==0.4.27
+python-magic-bin==0.4.14; sys_platform == 'win32'
+PyPDF2==3.0.1
+setuptools>=65.5.1 

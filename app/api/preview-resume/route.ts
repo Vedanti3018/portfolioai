@@ -1,37 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import fs from 'fs';
+import path from 'path';
+import { compile } from 'handlebars';
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
-    const searchParams = request.nextUrl.searchParams;
+    const { searchParams } = new URL(request.url);
     const templateId = searchParams.get('templateId');
-    const supabase = createClientComponentClient();
+    const resumeData = searchParams.get('resumeData');
+
+    if (!templateId) {
+      return new NextResponse('Template ID is required', { status: 400 });
+    }
 
     // Get the user's session
+    const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
+
     if (!session) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    // Get the user's primary resume
-    const { data: resume, error } = await supabase
-      .from('resumes')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .eq('is_primary', true)
-      .single();
+    // Load the template HTML
+    const templatePath = path.join(process.cwd(), 'resume-templates', `${templateId}.html`);
+    const templateContent = fs.readFileSync(templatePath, 'utf-8');
 
-    if (error && error.code !== 'PGRST116') {
-      throw error;
-    }
+    // Compile the template
+    const template = compile(templateContent);
 
-    // Get the template HTML
-    const templatePath = `resume-templates/${templateId}.html`;
-    const templateContent = await import(`@/${templatePath}`);
+    // Parse the resume data
+    const parsedResumeData = resumeData ? JSON.parse(decodeURIComponent(resumeData)) : null;
 
-    // Generate the HTML with the resume data
-    const html = generateResumeHtml(templateContent.default, resume);
+    // Render the template with the resume data
+    const html = template(parsedResumeData || {});
 
+    // Return the rendered HTML
     return new NextResponse(html, {
       headers: {
         'Content-Type': 'text/html',
@@ -39,7 +44,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error generating resume preview:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return new NextResponse('Error generating resume preview', { status: 500 });
   }
 }
 
