@@ -16,7 +16,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.StreamHandler(sys.stdout)
+        logging.StreamHandler(sys.stderr)
     ]
 )
 logger = logging.getLogger(__name__)
@@ -97,7 +97,7 @@ def validate_resume_json(data: Dict[str, Any]) -> bool:
         
         # Validate education entries
         for i, edu in enumerate(data['education']):
-            required_edu = ['Institute', 'Degree', 'field', 'startDate', 'endDate']
+            required_edu = ['school', 'degree', 'field', 'startDate', 'endDate']
             for field in required_edu:
                 if field not in edu:
                     logger.error(f"Missing required field in education entry {i}: {field}")
@@ -108,7 +108,7 @@ def validate_resume_json(data: Dict[str, Any]) -> bool:
         logger.error(f"Error validating resume JSON: {str(e)}")
         return False
 
-def call_groq_api(extracted_text: str, job_title: str, job_description: str) -> Dict[str, Any]:
+def call_groq_api(extracted_text: str, job_title: Optional[str] = None, job_description: Optional[str] = None, user_name: Optional[str] = None, user_email: Optional[str] = None) -> Dict[str, Any]:
     """Call Groq API to generate structured resume JSON."""
     logger.info("Calling Groq API for resume generation")
     api_key = os.environ.get('GROQ_API_KEY')
@@ -117,13 +117,16 @@ def call_groq_api(extracted_text: str, job_title: str, job_description: str) -> 
         logger.error(error_msg)
         raise RuntimeError(error_msg)
     
-    prompt = f"""
+    # Determine the type of generation and create appropriate prompt
+    if job_title and job_description:
+        # File-based enhancement flow
+        prompt = f"""
 You are an expert resume writer. Given the following resume content and a target job, rewrite and structure the resume for ATS compatibility. 
 IMPORTANT: You must respond with ONLY a valid JSON object, no other text. The JSON must have these exact fields:
 {{
   "personal": {{ "name": "", "title": "", "email": "", "phone": "", "location": "", "summary": "" }},
   "experience": [{{ "company": "", "position": "", "startDate": "", "endDate": "", "description": "" }}],
-  "education": [{{ "Institute": "", "Degree": "", "field": "", "startDate": "", "endDate": "" }}],
+  "education": [{{ "school": "", "degree": "", "field": "", "startDate": "", "endDate": "" }}],
   "skills": [],
   "projects": [{{ "title": "", "description": "", "startDate": "", "endDate": "" }}],
   "certifications": [{{ "name": "", "issuer": "", "date": "" }}],
@@ -138,6 +141,40 @@ Target Job Description: {job_description}
 
 Remember: Respond with ONLY the JSON object, no other text or explanation.
 """
+    else:
+        # Prompt-based generation flow
+        prompt = f"""
+You are an expert resume writer. Create a professional, complete resume for a candidate applying to the role of {extracted_text}.
+- Do NOT mention the target company or designation (e.g., {extracted_text}) in the experience section.
+- Instead, create a plausible work history at other companies and roles that would make the candidate a strong fit for this job.
+- Use the provided name and email in the personal section.
+- For all other sections (additional experience, education, skills, projects, certifications, awards), fill in realistic, professional, but fictional data as needed to make the resume look complete and impressive.
+- If any section is missing, invent plausible details.
+
+IMPORTANT: You must respond with ONLY a valid JSON object, no other text. The JSON must have these exact fields:
+{{
+  "personal": {{ 
+    "name": "{user_name}",
+    "title": "",
+    "email": "{user_email}",
+    "phone": "",
+    "location": "",
+    "summary": ""
+  }},
+  "experience": [{{ "company": "", "position": "", "startDate": "", "endDate": "", "description": "" }}],
+  "education": [{{ "school": "", "degree": "", "field": "", "startDate": "", "endDate": "" }}],
+  "skills": [
+  {{"Technical Skills": "", "Soft Skills": "", "Languages": "", "Tools": ""}}],
+  "projects": [{{ "title": "", "description": "", "startDate": "", "endDate": "" }}],
+  "certifications": [{{ "name": "", "issuer": "", "date": "" }}],
+  "awards": [{{ "award": "", "description": "", "date": "" }}],
+}}
+
+Target Role: {extracted_text}
+
+Remember: Respond with ONLY the JSON object, no other text or explanation. Do NOT mention the target company or designation in the experience section.
+"""
+
     headers = {
         'Authorization': f'Bearer {api_key}',
         'Content-Type': 'application/json',
@@ -198,28 +235,24 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description='Generate structured resume JSON from file or prompt and job info using Groq.')
     parser.add_argument('--file', help='Path or URL to the resume file (PDF, DOC, DOCX)')
-    parser.add_argument('--prompt', help='Raw resume prompt text (alternative to file)')
-    parser.add_argument('--job_title', required=True, help='Target job title')
-    parser.add_argument('--job_description', required=True, help='Target job description')
+    parser.add_argument('--prompt', required=True, help='Raw resume prompt text')
+    parser.add_argument('--job_title', help='Target job title (for file-based enhancement)')
+    parser.add_argument('--job_description', help='Target job description (for file-based enhancement)')
+    parser.add_argument('--user_name', help='User name (for prompt-based generation)')
+    parser.add_argument('--user_email', help='User email (for prompt-based generation)')
     args = parser.parse_args()
 
     logger.info("Starting resume generation process")
     logger.info(f"Input file: {args.file}")
     logger.info(f"Prompt: {args.prompt}")
-    logger.info(f"Target job title: {args.job_title}")
-
-    if not args.file and not args.prompt:
-        logger.error('Either --file or --prompt must be provided.')
-        sys.exit(1)
+    logger.info(f"Job title: {args.job_title}")
+    logger.info(f"User name: {args.user_name}")
 
     extracted_text = None
     cleanup = False
     file_path = None
 
-    if args.prompt:
-        extracted_text = args.prompt
-        logger.info('Using prompt as resume content.')
-    else:
+    if args.file:
         # Download if URL
         if args.file.startswith('http://') or args.file.startswith('https://'):
             file_path = download_file(args.file)
@@ -233,9 +266,18 @@ def main():
         except Exception as e:
             logger.error(f"Error extracting text: {str(e)}")
             sys.exit(1)
+    else:
+        extracted_text = args.prompt
+        logger.info('Using prompt as resume content.')
 
     try:
-        resume_json = call_groq_api(extracted_text, args.job_title, args.job_description)
+        resume_json = call_groq_api(
+            extracted_text,
+            job_title=args.job_title,
+            job_description=args.job_description,
+            user_name=args.user_name,
+            user_email=args.user_email
+        )
         logger.info("Resume JSON generation completed successfully")
         print(json.dumps(resume_json, indent=2))
     except Exception as e:

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Save, Download, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, Save, Download, Plus, Trash2, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ResumeData {
@@ -330,6 +330,28 @@ export default function ResumePreviewPage({ params }: { params: Promise<{ templa
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white p-8">
       <div className="max-w-7xl mx-auto">
+        <div className="flex items-center gap-4 mb-8">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push('/dashboard/resume')}
+            className="flex items-center gap-2 text-gray-400 hover:text-white"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back
+          </Button>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+              Resume Editor
+            </h1>
+            <p className="text-gray-400">
+              Template: {resolvedParams.templateId.split('-').map(word => 
+                word.charAt(0).toUpperCase() + word.slice(1)
+              ).join(' ')}
+            </p>
+          </div>
+        </div>
+
         <div className="flex justify-between items-center mb-8">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">

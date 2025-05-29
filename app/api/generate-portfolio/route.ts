@@ -244,39 +244,47 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    console.log('[API] /api/generate-portfolio POST handler entered');
     const supabase = createRouteHandlerClient({ cookies });
     
     // Check authentication
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
+      console.log('[API] No session found');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get request data
     const { portfolioData, templateId } = await request.json();
+    console.log('[API] Received data:', { portfolioData, templateId });
     if (!portfolioData || !templateId) {
+      console.log('[API] Missing required data');
       return NextResponse.json({ error: 'Missing required data' }, { status: 400 });
     }
 
     // Get URL parameters
     const { searchParams } = new URL(request.url);
     const isPreview = searchParams.get('preview') === 'true';
+    console.log('[API] isPreview:', isPreview);
 
     // Read the template HTML file
     const templatePath = path.join(process.cwd(), 'portfolio-templates', `${templateId}.html`);
     let templateHtml = await fs.readFile(templatePath, 'utf-8');
+    console.log('[API] Loaded template HTML from:', templatePath);
 
     // Read the corresponding CSS file
     const cssPath = path.join(process.cwd(), 'portfolio-templates', `${templateId}.css`);
     let cssContent = '';
     try {
       cssContent = await fs.readFile(cssPath, 'utf-8');
+      console.log('[API] Loaded CSS from:', cssPath);
     } catch (error) {
-      console.warn(`CSS file not found for template ${templateId}`);
+      console.warn(`[API] CSS file not found for template ${templateId}`);
     }
 
     // Render the template with the portfolio data
     const renderedHtml = renderTemplate(templateHtml, portfolioData);
+    console.log('[API] Rendered HTML length:', renderedHtml.length);
 
     // For preview mode, return the HTML with embedded CSS
     if (isPreview) {
@@ -293,6 +301,7 @@ export async function POST(request: Request) {
         </body>
         </html>
       `;
+      console.log('[API] Returning preview HTML');
       return new NextResponse(htmlWithCss, {
         headers: {
           'Content-Type': 'text/html',
@@ -301,14 +310,17 @@ export async function POST(request: Request) {
     }
 
     // For download mode, create a zip file
+    console.log('[API] Creating zip file...');
     const zip = new JSZip();
     zip.file('index.html', renderedHtml);
     zip.file('styles.css', cssContent);
 
     // Generate zip file
     const zipBlob = await zip.generateAsync({ type: 'blob' });
+    console.log('[API] Zip file generated, size:', (zipBlob as any).size || 'unknown');
 
     // Return the zip file
+    console.log('[API] Returning zip file response');
     return new NextResponse(zipBlob, {
       headers: {
         'Content-Type': 'application/zip',
@@ -317,7 +329,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Error generating portfolio:', error);
+    console.error('[API] Error generating portfolio:', error);
     return NextResponse.json(
       { error: 'Failed to generate portfolio' },
       { status: 500 }

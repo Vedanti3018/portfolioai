@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Download, Plus, Trash2, Sparkles } from 'lucide-react';
+import { Loader2, Download, Plus, Trash2, Sparkles, ArrowLeft, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -615,9 +615,9 @@ export default function PortfolioEditorPage() {
         });
 
         if (saveError) {
-          // Enhanced error logging
           console.error('Supabase error details:', {
             error: saveError,
+            fullResponse: { data, error: saveError, status, statusText },
             errorType: typeof saveError,
             errorKeys: Object.keys(saveError),
             code: saveError?.code,
@@ -628,18 +628,18 @@ export default function PortfolioEditorPage() {
             statusText,
             data: cleanDataToSave
           });
-
-          // Show user-friendly error message based on error code
-          if (saveError?.code === '23505') {
-            toast.error('A portfolio already exists for this user');
-          } else if (saveError?.code === '23503') {
-            toast.error('Invalid user ID or template ID');
-          } else if (saveError?.code === '22P02') {
-            toast.error('Invalid data format');
-          } else {
-            toast.error(saveError?.message || 'Failed to save portfolio');
+          if (Object.keys(saveError).length === 0) {
+            console.error('Supabase returned an empty error object. Check your table schema and network connection.');
           }
-          return;
+          if (saveError.code === '23505') {
+            throw new Error('A portfolio already exists for this user. Please update your existing portfolio instead.');
+          } else if (saveError.code === '23503') {
+            throw new Error('Invalid user ID or template ID. Please try again.');
+          } else if (saveError.code === '22P02') {
+            throw new Error('Invalid data format. Please check your input and try again.');
+          } else {
+            throw new Error(saveError.message || 'Failed to save portfolio data. Please try again.');
+          }
         }
 
         if (!data || data.length === 0) {
@@ -746,7 +746,7 @@ export default function PortfolioEditorPage() {
       };
 
       // Log the data being saved for debugging
-      console.log('Attempting to save portfolio data:', cleanDataToSave);
+      console.log('[Download] Attempting to save portfolio data:', cleanDataToSave);
 
       // Save portfolio data first
       const { data: savedPortfolio, error: saveError } = await supabase
@@ -759,15 +759,7 @@ export default function PortfolioEditorPage() {
         .single();
 
       if (saveError) {
-        console.error('Error saving portfolio:', {
-          error: saveError,
-          code: saveError.code,
-          message: saveError.message,
-          details: saveError.details,
-          hint: saveError.hint
-        });
-        
-        // Check for specific error types
+        console.error('[Download] Error saving portfolio:', saveError);
         if (saveError.code === '23505') {
           throw new Error('A portfolio already exists for this user. Please update your existing portfolio instead.');
         } else if (saveError.code === '23503') {
@@ -780,10 +772,11 @@ export default function PortfolioEditorPage() {
       }
 
       if (!savedPortfolio) {
-        throw new Error('Failed to save portfolio data. No data was returned from the server.');
+        throw new Error('[Download] Failed to save portfolio data. No data was returned from the server.');
       }
 
       // Call the backend API to get the zip file for download
+      console.log('[Download] Sending POST to /api/generate-portfolio with template:', selectedTemplate.fileName);
       const response = await fetch(`/api/generate-portfolio?template=${selectedTemplate.fileName}`, {
         method: 'POST',
         headers: { 
@@ -795,13 +788,21 @@ export default function PortfolioEditorPage() {
           templateId: templateId
         })
       });
+      console.log('[Download] Response status:', response.status, response.statusText);
 
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          errorData = { error: 'Unknown error, could not parse response as JSON.' };
+        }
+        console.error('[Download] Error response from API:', errorData);
         throw new Error(errorData.error || 'Failed to generate portfolio for download');
       }
 
       const blob = await response.blob();
+      console.log('[Download] Received blob:', blob);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -810,6 +811,7 @@ export default function PortfolioEditorPage() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+      console.log('[Download] Download triggered.');
 
       // Update download count in the database
       const { error: downloadCountError } = await supabase
@@ -822,13 +824,12 @@ export default function PortfolioEditorPage() {
         }]);
 
       if (downloadCountError) {
-        console.warn('Failed to update download count:', downloadCountError);
-        // Don't throw error here as the main download was successful
+        console.warn('[Download] Failed to update download count:', downloadCountError);
       }
 
       toast.success('Portfolio downloaded successfully!');
     } catch (err) {
-      console.error('Error downloading portfolio:', err);
+      console.error('[Download] Error downloading portfolio:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to download portfolio');
     }
   };
@@ -879,11 +880,17 @@ export default function PortfolioEditorPage() {
              className="rounded-full bg-white/10 p-2 hover:bg-white/20 transition"
              aria-label={editorOpen ? 'Collapse Editor' : 'Expand Editor'}
            >
-             {editorOpen ? (
-               <svg width="24" height="24" fill="none"><path d="M19 9l-7 7-7-7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-             ) : (
-               <svg width="24" height="24" fill="none"><path d="M5 15l7-7 7 7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-             )}
+             <svg 
+               width="24" 
+               height="24" 
+               fill="none" 
+               className={cn(
+                 "transition-transform duration-300",
+                 editorOpen ? "rotate-180" : ""
+               )}
+             >
+               <path d="M9 5l7 7-7 7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+             </svg>
            </button>
          </div>
 
@@ -1278,11 +1285,38 @@ export default function PortfolioEditorPage() {
        <main 
          className={cn(
            "transition-all duration-300 p-8 pt-24",
-           editorOpen ? "flex-1" : "w-full"
+           editorOpen ? "flex-1" : "w-full max-w-[1400px] mx-auto"
          )}
        >
-         <h1 className="text-3xl font-bold mb-8">Preview</h1>
-
+         {/* Sticky Preview Header */}
+         <div className="sticky top-16 z-10 bg-gray-900 rounded-t-2xl shadow-lg mb-4 p-4 flex justify-between items-center">
+           <Button
+             variant="ghost"
+             size="sm"
+             onClick={() => router.push('/dashboard/portfolio')}
+             className="flex items-center gap-2 text-gray-400 hover:text-black"
+           >
+             <ArrowLeft className="w-5 h-5" />
+             Back
+           </Button>
+           <div className="flex gap-2">
+             <Button
+               onClick={handleSave}
+               disabled={saving}
+               className="bg-gray-800 hover:bg-gray-700 text-white"
+             >
+               <Save className="w-4 h-4 mr-2" />
+               {saving ? 'Saving...' : 'Save'}
+             </Button>
+             <Button
+               onClick={handleDownload}
+               className="bg-gray-800 hover:bg-gray-700 text-white"
+             >
+               <Download className="w-4 h-4 mr-2" />
+               Download
+             </Button>
+           </div>
+         </div>
          <div className="flex justify-center">
            <div className="bg-white rounded-lg overflow-hidden shadow-xl mb-8 w-full max-w-3xl" style={{ height: '600px' }}>
               {/* Use an iframe to display the generated HTML safely */}
@@ -1296,17 +1330,6 @@ export default function PortfolioEditorPage() {
               )}
            </div>
          </div>
-
-         {/* Download Button */}
-        <div className="flex justify-center mt-4">
-           <Button
-              className="bg-white text-black hover:bg-gray-100 font-semibold px-6 py-3 rounded-md flex items-center gap-2 border border-gray-200"
-              onClick={handleDownload}
-           >
-              <Download className="h-5 w-5" />
-              Download Portfolio (.zip)
-           </Button>
-        </div>
        </main>
     </div>
   );

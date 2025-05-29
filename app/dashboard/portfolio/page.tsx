@@ -117,7 +117,7 @@ export default function PortfolioPage() {
           <h1 className="text-3xl font-bold">Choose Your Portfolio Template</h1>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-3 gap-4">
           {templates.map((template) => (
             <MotionCard
               key={template.id}
@@ -126,7 +126,7 @@ export default function PortfolioPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <div className="relative h-48 w-full overflow-hidden text-white">
+              <div className="relative h-40 w-full overflow-hidden text-white">
                 <Image
                   src={template.thumbnail}
                   alt={template.name}
@@ -134,14 +134,14 @@ export default function PortfolioPage() {
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
-              <CardHeader>
+              <CardHeader> 
                 <div className="flex items-center justify-between">
-                <CardTitle
-                  className="text-xl font-semibold"
-                  style={{ color: template.colors[template.colors.length - 1] }}
-                >
-                  {template.name}
-                </CardTitle>
+                  <CardTitle
+                    className="text-xl font-semibold"
+                    style={{ color: template.colors[template.colors.length - 1] }}
+                  >
+                    {template.name}
+                  </CardTitle>
                   <div className="flex gap-1">
                     {template.colors.map((color, index) => (
                       <div
@@ -154,10 +154,9 @@ export default function PortfolioPage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-gray-300">{template.description}</p>
+              <CardContent className="pb-6 flex flex-col items-center">
                 <Button
-                  className="w-full bg-white/10 text-white hover:bg-white/20 border border-white/20"
+                  className="w-full bg-white/10 text-white hover:bg-white/20 border border-white/20 mt-2"
                   onClick={() => router.push(`/dashboard/portfolio/preview/${template.id}`)}
                 >
                   Use Template

@@ -35,6 +35,23 @@ interface ResumeContent {
   experience: Experience[];
   education: Education[];
   skills: string[];
+  projects?: {
+    title: string;
+    url?: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+  }[];
+  awards?: {
+    award: string;
+    date: string;
+    description: string;
+  }[];
+  certifications?: {
+    name: string;
+    issuer: string;
+    date: string;
+  }[];
 }
 
 export async function POST(request: Request) {
@@ -51,6 +68,9 @@ export async function POST(request: Request) {
 
     // Create a temporary HTML file
     const tempDir = path.join(process.cwd(), 'temp');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir);
+    }
     const htmlPath = path.join(tempDir, `${resumeId}.html`);
     const pdfPath = path.join(tempDir, `${resumeId}.pdf`);
 
@@ -118,6 +138,15 @@ export async function POST(request: Request) {
               border-radius: 4px;
               font-size: 0.9rem;
             }
+            .award-title {
+              color: #1d4ed8;
+              text-decoration: underline;
+              font-weight: bold;
+            }
+            .project-link {
+              color: #2563eb;
+              text-decoration: underline;
+            }
           </style>
         </head>
         <body>
@@ -134,7 +163,7 @@ export async function POST(request: Request) {
 
           <div class="section">
             <h2>Experience</h2>
-            ${content.experience.map((exp: Experience) => `
+            ${content.experience.map((exp) => `
               <div class="item">
                 <h3>${exp.position}</h3>
                 <div class="meta">${exp.company} | ${exp.startDate} - ${exp.endDate}</div>
@@ -145,7 +174,7 @@ export async function POST(request: Request) {
 
           <div class="section">
             <h2>Education</h2>
-            ${content.education.map((edu: Education) => `
+            ${content.education.map((edu) => `
               <div class="item">
                 <h3>${edu.degree} in ${edu.field}</h3>
                 <div class="meta">${edu.school} | ${edu.startDate} - ${edu.endDate}</div>
@@ -156,11 +185,50 @@ export async function POST(request: Request) {
           <div class="section">
             <h2>Skills</h2>
             <div class="skills">
-              ${content.skills.map((skill: string) => `
+              ${content.skills.map((skill) => `
                 <span class="skill">${skill}</span>
               `).join('')}
             </div>
           </div>
+
+          ${content.projects && content.projects.length > 0 ? `
+          <div class="section">
+            <h2>Projects</h2>
+            ${content.projects.map((project) => `
+              <div class="item">
+                <h3>${project.title} ${project.url ? `<a href='${project.url}' class='project-link'>(Link)</a>` : ''}</h3>
+                <div class="meta">${project.startDate} - ${project.endDate}</div>
+                <div class="description">${project.description}</div>
+              </div>
+            `).join('')}
+          </div>
+          ` : ''}
+
+          ${content.awards && content.awards.length > 0 ? `
+          <div class="section">
+            <h2>Awards & Achievements</h2>
+            ${content.awards.map((award) => `
+              <div class="item">
+                <div class="award-title">${award.award}</div>
+                <div class="meta">${award.date}</div>
+                <div class="description">${award.description}</div>
+              </div>
+            `).join('')}
+          </div>
+          ` : ''}
+
+          ${content.certifications && content.certifications.length > 0 ? `
+          <div class="section">
+            <h2>Certifications</h2>
+            ${content.certifications.map((cert) => `
+              <div class="item">
+                <h3>${cert.name}</h3>
+                <div class="meta">${cert.issuer} | ${cert.date}</div>
+              </div>
+            `).join('')}
+          </div>
+          ` : ''}
+
         </body>
       </html>
     `;

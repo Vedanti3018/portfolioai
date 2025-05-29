@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { FileText, Upload } from 'lucide-react';
+import { FileText, Upload, ArrowLeft } from 'lucide-react';
 
 interface Resume {
   id: string;
@@ -160,9 +160,18 @@ export default function SelectResumePage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#0f0f0f] text-white px-4">
-      <h1 className="text-3xl font-bold mb-10 mt-10 text-center text-white">
-        Select or Upload a Resume
-      </h1>
+      <div className="flex items-center gap-4 mb-8">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.push('/dashboard/resume')}
+          className="flex items-center gap-2 text-gray-400 hover:text-white"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Back
+        </Button>
+        <h1 className="text-3xl font-bold">Select Resume</h1>
+      </div>
       <div className="flex flex-col md:flex-row gap-8 w-full max-w-3xl justify-center items-center">
         <Card
           className="bg-[#18181b] border border-white/10 text-white cursor-pointer hover:shadow-2xl hover:border-blue-500 transition-all p-8 flex flex-col items-center justify-center min-h-[180px] w-full md:w-1/2"

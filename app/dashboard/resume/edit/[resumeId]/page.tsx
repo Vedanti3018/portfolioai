@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { ChevronDown, ChevronUp, Download, Save, CheckCircle, Plus } from 'lucide-react';
-import { use } from 'react';
+import { ChevronDown, ChevronUp, Download, Save, CheckCircle, Plus, ArrowLeft } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface ResumeData {
   personal: {
@@ -63,6 +63,14 @@ interface Resume {
   updated_at: string;
 }
 
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="uppercase font-bold text-gray-900 tracking-wider text-lg mt-6 mb-2">
+      {children}
+    </div>
+  );
+}
+
 export default function EditResumePage({ params }: { params: Promise<{ resumeId: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
@@ -70,17 +78,22 @@ export default function EditResumePage({ params }: { params: Promise<{ resumeId:
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [resume, setResume] = useState<Resume | null>(null);
-  const [expandedSections, setExpandedSections] = useState({
-    personal: true,
-    experience: true,
-    education: true,
-    skills: true,
-    projects: true,
-    certifications: true,
-    awards: true
-  });
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Accordion state for each section
+  const [openSections, setOpenSections] = useState({
+    personal: false,
+    experience: false,
+    education: false,
+    skills: false,
+    projects: false,
+    certifications: false,
+    awards: false
+  });
+
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
 
   useEffect(() => {
     const fetchResume = async () => {
@@ -108,13 +121,6 @@ export default function EditResumePage({ params }: { params: Promise<{ resumeId:
 
     fetchResume();
   }, [resolvedParams.resumeId, router, supabase]);
-
-  const toggleSection = (section: keyof typeof expandedSections) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-  };
 
   const handlePersonalChange = (field: keyof ResumeData['personal'], value: string) => {
     if (!resume) return;
@@ -481,660 +487,438 @@ export default function EditResumePage({ params }: { params: Promise<{ resumeId:
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Edit Resume</h1>
-          <div className="flex gap-4">
-            <Button
-              onClick={handleSave}
-              disabled={saving}
-              className="bg-gray-800 hover:bg-gray-700 text-white"
+    <div className="min-h-screen bg-black text-white p-4">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mt-20">
+        {/* Editor: 1/3 width, accordion layout */}
+        <div className="w-full lg:col-span-1 flex flex-col space-y-6">
+          {/* Personal Information Accordion */}
+          <Card className="bg-gray-900 border-gray-800">
+            <CardHeader className="flex flex-row items-center justify-between cursor-pointer select-none" onClick={() => toggleSection('personal')}>
+              <CardTitle className="text-lg font-semibold text-white">Personal Information</CardTitle>
+              {openSections.personal ? <ChevronUp /> : <ChevronDown />}
+            </CardHeader>
+            <motion.div
+              initial={false}
+              animate={{ height: openSections.personal ? 'auto' : 0, opacity: openSections.personal ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+              style={{ overflow: 'hidden' }}
             >
-              <Save className="w-4 h-4 mr-2" />
-              {saving ? 'Saving...' : 'Save'}
-            </Button>
-            <Button
-              onClick={handleDownload}
-              className="bg-gray-800 hover:bg-gray-700 text-white"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Download
-            </Button>
-          </div>
-        </div>
-
-        {error && (
-          <div className="mb-4 p-4 bg-red-900/50 border border-red-500 rounded-lg">
-            <p className="text-red-200">{error}</p>
-          </div>
-        )}
-
-        {showSuccess && (
-          <div className="mb-4 p-4 bg-green-900/50 border border-green-500 rounded-lg flex items-center">
-            <CheckCircle className="w-5 h-5 text-green-400 mr-2" />
-            <p className="text-green-200">Resume saved successfully!</p>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column - Form */}
-          <div className="space-y-6">
-            {/* Personal Information */}
-            <Card className="bg-gray-900 border-gray-800">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-white">Personal Information</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => toggleSection('personal')}
-                  className="text-gray-400 hover:text-white"
-                >
-                  {expandedSections.personal ? <ChevronUp /> : <ChevronDown />}
-                </Button>
-              </CardHeader>
-              {expandedSections.personal && (
+              {openSections.personal && (
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-gray-200">Name</Label>
-                      <Input
-                        value={resume.content.personal.name}
-                        onChange={(e) => handlePersonalChange('name', e.target.value)}
-                        className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
-                      />
+                      <Input value={resume.content.personal.name} onChange={(e) => handlePersonalChange('name', e.target.value)} className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-gray-200">Title</Label>
-                      <Input
-                        value={resume.content.personal.title}
-                        onChange={(e) => handlePersonalChange('title', e.target.value)}
-                        className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
-                      />
+                      <Input value={resume.content.personal.title} onChange={(e) => handlePersonalChange('title', e.target.value)} className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-gray-200">Email</Label>
-                      <Input
-                        value={resume.content.personal.email}
-                        onChange={(e) => handlePersonalChange('email', e.target.value)}
-                        className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
-                      />
+                      <Input value={resume.content.personal.email} onChange={(e) => handlePersonalChange('email', e.target.value)} className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-gray-200">Phone</Label>
-                      <Input
-                        value={resume.content.personal.phone}
-                        onChange={(e) => handlePersonalChange('phone', e.target.value)}
-                        className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
-                      />
+                      <Input value={resume.content.personal.phone} onChange={(e) => handlePersonalChange('phone', e.target.value)} className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-gray-200">Location</Label>
-                    <Input
-                      value={resume.content.personal.location}
-                      onChange={(e) => handlePersonalChange('location', e.target.value)}
-                      className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
-                    />
+                    <Input value={resume.content.personal.location} onChange={(e) => handlePersonalChange('location', e.target.value)} className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-gray-200">Summary</Label>
-                    <Textarea
-                      value={resume.content.personal.summary}
-                      onChange={(e) => handlePersonalChange('summary', e.target.value)}
-                      className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 min-h-[100px]"
-                    />
+                    <Textarea value={resume.content.personal.summary} onChange={(e) => handlePersonalChange('summary', e.target.value)} className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 min-h-[100px]" />
                   </div>
                 </CardContent>
               )}
-            </Card>
-
-            {/* Experience Section */}
-            <Card className="bg-gray-900 border-gray-800">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-white">Experience</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={addExperience}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    Add
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleSection('experience')}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    {expandedSections.experience ? <ChevronUp /> : <ChevronDown />}
-                  </Button>
-                </div>
-              </CardHeader>
-              {expandedSections.experience && (
+            </motion.div>
+          </Card>
+          {/* Experience Accordion */}
+          <Card className="bg-gray-900 border-gray-800">
+            <CardHeader className="flex flex-row items-center justify-between cursor-pointer select-none" onClick={() => toggleSection('experience')}>
+              <CardTitle className="text-lg font-semibold text-white">Experience</CardTitle>
+              {openSections.experience ? <ChevronUp /> : <ChevronDown />}
+            </CardHeader>
+            <motion.div
+              initial={false}
+              animate={{ height: openSections.experience ? 'auto' : 0, opacity: openSections.experience ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+              style={{ overflow: 'hidden' }}
+            >
+              {openSections.experience && (
                 <CardContent className="space-y-6">
                   {resume.content.experience.map((exp, index) => (
                     <div key={index} className="space-y-4 p-4 bg-gray-800 rounded-lg">
                       <div className="flex justify-between items-center">
                         <h3 className="font-medium text-white">Experience {index + 1}</h3>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeExperience(index)}
-                          className="text-red-400 hover:text-red-300"
-                        >
-                          Remove
-                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => removeExperience(index)} className="text-red-400 hover:text-red-300">Remove</Button>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-gray-200">Company</Label>
-                          <Input
-                            value={exp.company}
-                            onChange={(e) => handleExperienceChange(index, 'company', e.target.value)}
-                            className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                          />
+                          <Input value={exp.company} onChange={(e) => handleExperienceChange(index, 'company', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-gray-200">Position</Label>
-                          <Input
-                            value={exp.position}
-                            onChange={(e) => handleExperienceChange(index, 'position', e.target.value)}
-                            className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                          />
+                          <Input value={exp.position} onChange={(e) => handleExperienceChange(index, 'position', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-gray-200">Start Date</Label>
-                          <Input
-                            value={exp.startDate}
-                            onChange={(e) => handleExperienceChange(index, 'startDate', e.target.value)}
-                            className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                          />
+                          <Input value={exp.startDate} onChange={(e) => handleExperienceChange(index, 'startDate', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-gray-200">End Date</Label>
-                          <Input
-                            value={exp.endDate}
-                            onChange={(e) => handleExperienceChange(index, 'endDate', e.target.value)}
-                            className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                          />
+                          <Input value={exp.endDate} onChange={(e) => handleExperienceChange(index, 'endDate', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-gray-200">Description</Label>
-                        <Textarea
-                          value={exp.description}
-                          onChange={(e) => handleExperienceChange(index, 'description', e.target.value)}
-                          className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500 min-h-[100px]"
-                        />
+                        <Textarea value={exp.description} onChange={(e) => handleExperienceChange(index, 'description', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500 min-h-[100px]" />
                       </div>
                     </div>
                   ))}
+                  <Button variant="ghost" size="sm" onClick={addExperience} className="text-gray-400 hover:text-white">Add Experience</Button>
                 </CardContent>
               )}
-            </Card>
-
-            {/* Education Section */}
-            <Card className="bg-gray-900 border-gray-800">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-white">Education</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={addEducation}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    Add
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleSection('education')}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    {expandedSections.education ? <ChevronUp /> : <ChevronDown />}
-                  </Button>
-                </div>
-              </CardHeader>
-              {expandedSections.education && (
+            </motion.div>
+          </Card>
+          {/* Education Accordion */}
+          <Card className="bg-gray-900 border-gray-800">
+            <CardHeader className="flex flex-row items-center justify-between cursor-pointer select-none" onClick={() => toggleSection('education')}>
+              <CardTitle className="text-lg font-semibold text-white">Education</CardTitle>
+              {openSections.education ? <ChevronUp /> : <ChevronDown />}
+            </CardHeader>
+            <motion.div
+              initial={false}
+              animate={{ height: openSections.education ? 'auto' : 0, opacity: openSections.education ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+              style={{ overflow: 'hidden' }}
+            >
+              {openSections.education && (
                 <CardContent className="space-y-6">
                   {resume.content.education.map((edu, index) => (
                     <div key={index} className="space-y-4 p-4 bg-gray-800 rounded-lg">
                       <div className="flex justify-between items-center">
                         <h3 className="font-medium text-white">Education {index + 1}</h3>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeEducation(index)}
-                          className="text-red-400 hover:text-red-300"
-                        >
-                          Remove
-                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => removeEducation(index)} className="text-red-400 hover:text-red-300">Remove</Button>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-gray-200">School</Label>
-                          <Input
-                            value={edu.school}
-                            onChange={(e) => handleEducationChange(index, 'school', e.target.value)}
-                            className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                          />
+                          <Input value={edu.school} onChange={(e) => handleEducationChange(index, 'school', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-gray-200">Degree</Label>
-                          <Input
-                            value={edu.degree}
-                            onChange={(e) => handleEducationChange(index, 'degree', e.target.value)}
-                            className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                          />
+                          <Input value={edu.degree} onChange={(e) => handleEducationChange(index, 'degree', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-gray-200">Field</Label>
-                          <Input
-                            value={edu.field}
-                            onChange={(e) => handleEducationChange(index, 'field', e.target.value)}
-                            className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                          />
+                          <Input value={edu.field} onChange={(e) => handleEducationChange(index, 'field', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-gray-200">Start Date</Label>
-                          <Input
-                            value={edu.startDate}
-                            onChange={(e) => handleEducationChange(index, 'startDate', e.target.value)}
-                            className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                          />
+                          <Input value={edu.startDate} onChange={(e) => handleEducationChange(index, 'startDate', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-gray-200">End Date</Label>
-                        <Input
-                          value={edu.endDate}
-                          onChange={(e) => handleEducationChange(index, 'endDate', e.target.value)}
-                          className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                        />
+                        <Input value={edu.endDate} onChange={(e) => handleEducationChange(index, 'endDate', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                       </div>
                     </div>
                   ))}
+                  <Button variant="ghost" size="sm" onClick={addEducation} className="text-gray-400 hover:text-white">Add Education</Button>
                 </CardContent>
               )}
-            </Card>
-
-            {/* Skills Section */}
-            <Card className="bg-gray-900 border-gray-800">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-white">Skills</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => toggleSection('skills')}
-                  className="text-gray-400 hover:text-white"
-                >
-                  {expandedSections.skills ? <ChevronUp /> : <ChevronDown />}
-                </Button>
-              </CardHeader>
-              {expandedSections.skills && (
+            </motion.div>
+          </Card>
+          {/* Skills Accordion */}
+          <Card className="bg-gray-900 border-gray-800">
+            <CardHeader className="flex flex-row items-center justify-between cursor-pointer select-none" onClick={() => toggleSection('skills')}>
+              <CardTitle className="text-lg font-semibold text-white">Skills</CardTitle>
+              {openSections.skills ? <ChevronUp /> : <ChevronDown />}
+            </CardHeader>
+            <motion.div
+              initial={false}
+              animate={{ height: openSections.skills ? 'auto' : 0, opacity: openSections.skills ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+              style={{ overflow: 'hidden' }}
+            >
+              {openSections.skills && (
                 <CardContent>
                   <div className="space-y-2">
                     <Label className="text-gray-200">Skills (comma-separated)</Label>
-                    <Textarea
-                      value={resume.content.skills.join(', ')}
-                      onChange={(e) => handleSkillsChange(e.target.value)}
-                      className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 min-h-[100px]"
-                    />
+                    <Textarea value={resume.content.skills.join(', ')} onChange={(e) => handleSkillsChange(e.target.value)} className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 min-h-[100px]" />
                   </div>
                 </CardContent>
               )}
-            </Card>
-
-            {/* Projects Section */}
-            <Card className="bg-gray-900 border-gray-800">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-white">Projects</CardTitle>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleSection('projects')}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    {expandedSections.projects ? <ChevronUp /> : <ChevronDown />}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={addProject}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              {expandedSections.projects && (
+            </motion.div>
+          </Card>
+          {/* Projects Accordion */}
+          <Card className="bg-gray-900 border-gray-800">
+            <CardHeader className="flex flex-row items-center justify-between cursor-pointer select-none" onClick={() => toggleSection('projects')}>
+              <CardTitle className="text-lg font-semibold text-white">Projects</CardTitle>
+              {openSections.projects ? <ChevronUp /> : <ChevronDown />}
+            </CardHeader>
+            <motion.div
+              initial={false}
+              animate={{ height: openSections.projects ? 'auto' : 0, opacity: openSections.projects ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+              style={{ overflow: 'hidden' }}
+            >
+              {openSections.projects && (
                 <CardContent className="space-y-4">
                   {(resume?.content.projects || []).map((project, index) => (
                     <div key={index} className="space-y-4 p-4 bg-gray-800 rounded-lg">
                       <div className="flex justify-between items-center">
                         <h3 className="font-medium text-white">Project {index + 1}</h3>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeProject(index)}
-                          className="text-red-400 hover:text-red-300"
-                        >
-                          Remove
-                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => removeProject(index)} className="text-red-400 hover:text-red-300">Remove</Button>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-gray-200">Title</Label>
-                        <Input
-                          value={project.title}
-                          onChange={(e) => handleProjectChange(index, 'title', e.target.value)}
-                          className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                        />
+                        <Input value={project.title} onChange={(e) => handleProjectChange(index, 'title', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-gray-200">Start Date</Label>
-                          <Input
-                            value={project.startDate}
-                            onChange={(e) => handleProjectChange(index, 'startDate', e.target.value)}
-                            className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                          />
+                          <Input value={project.startDate} onChange={(e) => handleProjectChange(index, 'startDate', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-gray-200">End Date</Label>
-                          <Input
-                            value={project.endDate}
-                            onChange={(e) => handleProjectChange(index, 'endDate', e.target.value)}
-                            className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                          />
+                          <Input value={project.endDate} onChange={(e) => handleProjectChange(index, 'endDate', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-gray-200">Description</Label>
-                        <Textarea
-                          value={project.description}
-                          onChange={(e) => handleProjectChange(index, 'description', e.target.value)}
-                          className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500 min-h-[100px]"
-                        />
+                        <Textarea value={project.description} onChange={(e) => handleProjectChange(index, 'description', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500 min-h-[100px]" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-gray-200">Project URL (optional)</Label>
-                        <Input
-                          value={project.url || ''}
-                          onChange={(e) => handleProjectChange(index, 'url', e.target.value)}
-                          className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                        />
+                        <Input value={project.url || ''} onChange={(e) => handleProjectChange(index, 'url', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                       </div>
                     </div>
                   ))}
+                  <Button variant="ghost" size="sm" onClick={addProject} className="text-gray-400 hover:text-white"><Plus className="w-4 h-4" /> Add Project</Button>
                 </CardContent>
               )}
-            </Card>
-
-            {/* Certifications Section */}
-            <Card className="bg-gray-900 border-gray-800">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-white">Certifications</CardTitle>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleSection('certifications')}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    {expandedSections.certifications ? <ChevronUp /> : <ChevronDown />}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={addCertification}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              {expandedSections.certifications && (
+            </motion.div>
+          </Card>
+          {/* Certifications Accordion */}
+          <Card className="bg-gray-900 border-gray-800">
+            <CardHeader className="flex flex-row items-center justify-between cursor-pointer select-none" onClick={() => toggleSection('certifications')}>
+              <CardTitle className="text-lg font-semibold text-white">Certifications</CardTitle>
+              {openSections.certifications ? <ChevronUp /> : <ChevronDown />}
+            </CardHeader>
+            <motion.div
+              initial={false}
+              animate={{ height: openSections.certifications ? 'auto' : 0, opacity: openSections.certifications ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+              style={{ overflow: 'hidden' }}
+            >
+              {openSections.certifications && (
                 <CardContent className="space-y-4">
                   {(resume?.content.certifications || []).map((cert, index) => (
                     <div key={index} className="space-y-4 p-4 bg-gray-800 rounded-lg">
                       <div className="flex justify-between items-center">
                         <h3 className="font-medium text-white">Certification {index + 1}</h3>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeCertification(index)}
-                          className="text-red-400 hover:text-red-300"
-                        >
-                          Remove
-                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => removeCertification(index)} className="text-red-400 hover:text-red-300">Remove</Button>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-gray-200">Name</Label>
-                        <Input
-                          value={cert.name}
-                          onChange={(e) => handleCertificationChange(index, 'name', e.target.value)}
-                          className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                        />
+                        <Input value={cert.name} onChange={(e) => handleCertificationChange(index, 'name', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-gray-200">Issuer</Label>
-                        <Input
-                          value={cert.issuer}
-                          onChange={(e) => handleCertificationChange(index, 'issuer', e.target.value)}
-                          className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                        />
+                        <Input value={cert.issuer} onChange={(e) => handleCertificationChange(index, 'issuer', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-gray-200">Date</Label>
-                        <Input
-                          value={cert.date}
-                          onChange={(e) => handleCertificationChange(index, 'date', e.target.value)}
-                          className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                        />
+                        <Input value={cert.date} onChange={(e) => handleCertificationChange(index, 'date', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-gray-200">Certificate URL (optional)</Label>
-                        <Input
-                          value={cert.url || ''}
-                          onChange={(e) => handleCertificationChange(index, 'url', e.target.value)}
-                          className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                        />
+                        <Input value={cert.url || ''} onChange={(e) => handleCertificationChange(index, 'url', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                       </div>
                     </div>
                   ))}
+                  <Button variant="ghost" size="sm" onClick={addCertification} className="text-gray-400 hover:text-white"><Plus className="w-4 h-4" /> Add Certification</Button>
                 </CardContent>
               )}
-            </Card>
-
-            {/* Awards Section */}
-            <Card className="bg-gray-900 border-gray-800">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-white">Awards</CardTitle>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleSection('awards')}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    {expandedSections.awards ? <ChevronUp /> : <ChevronDown />}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={addAward}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              {expandedSections.awards && (
+            </motion.div>
+          </Card>
+          {/* Awards Accordion */}
+          <Card className="bg-gray-900 border-gray-800">
+            <CardHeader className="flex flex-row items-center justify-between cursor-pointer select-none" onClick={() => toggleSection('awards')}>
+              <CardTitle className="text-lg font-semibold text-white">Awards</CardTitle>
+              {openSections.awards ? <ChevronUp /> : <ChevronDown />}
+            </CardHeader>
+            <motion.div
+              initial={false}
+              animate={{ height: openSections.awards ? 'auto' : 0, opacity: openSections.awards ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+              style={{ overflow: 'hidden' }}
+            >
+              {openSections.awards && (
                 <CardContent className="space-y-4">
                   {(resume?.content.awards || []).map((award, index) => (
                     <div key={index} className="space-y-4 p-4 bg-gray-800 rounded-lg">
                       <div className="flex justify-between items-center">
                         <h3 className="font-medium text-white">Award {index + 1}</h3>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeAward(index)}
-                          className="text-red-400 hover:text-red-300"
-                        >
-                          Remove
-                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => removeAward(index)} className="text-red-400 hover:text-red-300">Remove</Button>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-gray-200">Award Name</Label>
-                        <Input
-                          value={award.award}
-                          onChange={(e) => handleAwardChange(index, 'award', e.target.value)}
-                          className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                        />
+                        <Input value={award.award} onChange={(e) => handleAwardChange(index, 'award', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-gray-200">Description</Label>
-                        <Textarea
-                          value={award.description}
-                          onChange={(e) => handleAwardChange(index, 'description', e.target.value)}
-                          className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500 min-h-[100px]"
-                        />
+                        <Textarea value={award.description} onChange={(e) => handleAwardChange(index, 'description', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500 min-h-[100px]" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-gray-200">Date</Label>
-                        <Input
-                          value={award.date}
-                          onChange={(e) => handleAwardChange(index, 'date', e.target.value)}
-                          className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
-                        />
+                        <Input value={award.date} onChange={(e) => handleAwardChange(index, 'date', e.target.value)} className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-500" />
                       </div>
                     </div>
                   ))}
+                  <Button variant="ghost" size="sm" onClick={addAward} className="text-gray-400 hover:text-white"><Plus className="w-4 h-4" /> Add Award</Button>
                 </CardContent>
               )}
-            </Card>
-          </div>
-
-          {/* Right Column - Preview */}
-          <div className="flex flex-col h-full space-y-6">
-            <Card className="bg-gray-900 border-gray-800 flex flex-col h-full">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-white">Preview</CardTitle>
+            </motion.div>
+          </Card>
+        </div>
+        {/* Preview: 2/3 width */}
+        <div className="w-full lg:col-span-2 flex flex-col h-full space-y-6 mt-20 lg:mt-0">
+          <div className="relative flex-1 flex flex-col items-center justify-start bg-[#101014] rounded-2xl p-6" style={{ minHeight: 0 }}>
+            <Card className="bg-gray-900 border-gray-800 flex flex-col h-full w-full max-w-3xl mx-auto shadow-xl">
+              <CardHeader className="flex flex-row items-center justify-between gap-2 sticky top-0 z-10 bg-gray-900 rounded-t-2xl">
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => router.push('/dashboard/resume')}
+                    className="flex items-center gap-2 text-gray-400 hover:text-black"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                    Back
+                  </Button>
+                </div>
+                <div className="flex gap-2 ml-auto">
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="bg-gray-800 hover:bg-gray-700 text-white"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {saving ? 'Saving...' : 'Save'}
+                  </Button>
+                  <Button
+                    onClick={handleDownload}
+                    className="bg-gray-800 hover:bg-gray-700 text-white"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download
+                  </Button>
+                </div>
               </CardHeader>
-              <CardContent className="flex-1 flex flex-col">
-                <div className="bg-white text-black p-8 rounded-lg shadow-lg flex-1">
-                  {isResumeContentEmpty(resume?.content) ? (
-                    <div className="text-center text-gray-500 text-lg py-16">
-                      No extracted information found for this resume.<br />
-                      Please try uploading again or select a different file.
+              <CardContent className="flex-1 flex flex-col overflow-auto" style={{ minHeight: 0 }}>
+                <div
+                  className="flex justify-center items-start w-full"
+                  style={{ minHeight: 0 }}
+                >
+                  <div className="bg-white text-black rounded-lg shadow-lg p-8 max-w-2xl mx-auto text-[15px] leading-relaxed">
+                    {/* Header */}
+                    <div className="text-center mb-2">
+                      <h1 className="text-2xl font-extrabold">{resume?.content.personal.name || "Your Name"}</h1>
+                      <div className="text-base">{resume?.content.personal.title}</div>
+                      <div className="flex flex-wrap justify-center gap-2 text-xs text-gray-700 mt-2">
+                        <span>{resume?.content.personal.email}</span>
+                        <span>•</span>
+                        <span>{resume?.content.personal.location}</span>
+                        {/* Add more: LinkedIn, GitHub, etc. */}
+                      </div>
                     </div>
-                  ) : (
-                    <>
-                      <h1 className="text-2xl font-bold mb-2">{resume?.content.personal.name || "Your Name"}</h1>
-                      <p className="text-gray-700 mb-2">{resume?.content.personal.title || "Title"}</p>
-                      <div className="text-sm text-gray-600 mb-4">
-                        <p>{resume?.content.personal.email}</p>
-                        <p>{resume?.content.personal.phone}</p>
-                        <p>{resume?.content.personal.location}</p>
+                    {/* Divider */}
+                    <hr className="my-4 border-gray-300" />
+
+                    {/* SUMMARY */}
+                    <div className="uppercase font-bold text-gray-900 tracking-wider text-base mt-8 mb-2 border-b border-gray-300 pb-1">Summary</div>
+                    <div className="mb-4 text-gray-800 text-[15px]">{resume?.content.personal.summary}</div>
+
+                    {/* WORK EXPERIENCE */}
+                    <div className="uppercase font-bold text-gray-900 tracking-wider text-base mt-8 mb-2 border-b border-gray-300 pb-1">Work Experience</div>
+                    {resume?.content.experience?.map((exp, idx) => (
+                      <div key={idx} className="flex justify-between mb-2">
+                        <div>
+                          <div className="font-semibold text-[15px]">{exp.position}</div>
+                          <div className="text-gray-700 text-xs">{exp.company}</div>
+                          <ul className="list-disc ml-5 text-gray-800 text-[15px]">
+                            {exp.description.split('\n').map((line, i) => <li key={i}>{line}</li>)}
+                          </ul>
+                        </div>
+                        <div className="text-xs text-gray-500 whitespace-nowrap">{exp.startDate} — {exp.endDate}</div>
                       </div>
-                      <div className="mb-4">
-                        <h2 className="text-lg font-semibold mb-1">Summary</h2>
-                        <p className="text-gray-700">{resume?.content.personal.summary || "No summary provided."}</p>
+                    ))}
+
+                    {/* SKILLS */}
+                    <div className="uppercase font-bold text-gray-900 tracking-wider text-base mt-8 mb-2 border-b border-gray-300 pb-1">Skills</div>
+                    <div className="mb-4 text-gray-800 text-[15px]">
+                      {Array.isArray(resume?.content.skills)
+                        ? resume.content.skills.map((skill, idx) =>
+                            typeof skill === 'string'
+                              ? <span key={idx}>{skill}{idx < resume.content.skills.length - 1 ? ', ' : ''}</span>
+                              : <div key={idx}>
+                                  {Object.entries(skill).map(([cat, val]) => (
+                                    <span key={cat}><span className="font-bold">{cat}:</span> {String(val)}; </span>
+                                  ))}
+                                </div>
+                        )
+                        : <span>{String(resume?.content.skills)}</span>
+                      }
+                    </div>
+
+                    {/* PROJECTS */}
+                    <div className="uppercase font-bold text-gray-900 tracking-wider text-base mt-8 mb-2 border-b border-gray-300 pb-1">Projects</div>
+                    {resume?.content.projects?.map((project, idx) => (
+                      <div key={idx} className="flex justify-between mb-2">
+                        <div>
+                          <div className="font-semibold text-[15px]">{project.title} <span className="text-blue-600 underline">{project.url && <a href={project.url} target="_blank" rel="noopener noreferrer">Link</a>}</span></div>
+                          <ul className="list-disc ml-5 text-gray-800 text-[15px]">
+                            {project.description.split('\n').map((line, i) => <li key={i}>{line}</li>)}
+                          </ul>
+                        </div>
+                        <div className="text-xs text-gray-500 whitespace-nowrap">{project.startDate} — {project.endDate}</div>
                       </div>
-                      <div className="mb-4">
-                        <h2 className="text-lg font-semibold mb-1">Experience</h2>
-                        {resume?.content.experience && resume.content.experience.length > 0 ? (
-                          resume.content.experience.map((exp, idx) => (
-                            <div key={idx} className="mb-2">
-                              <div className="font-semibold">{exp.position} at {exp.company}</div>
-                              <div className="text-xs text-gray-500">{exp.startDate} - {exp.endDate}</div>
-                              <div>{exp.description}</div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-gray-400">No experience added.</div>
-                        )}
+                    ))}
+
+                    {/* AWARDS & ACHIEVEMENTS */}
+                    <div className="uppercase font-bold text-gray-900 tracking-wider text-base mt-8 mb-2 border-b border-gray-300 pb-1">Awards & Achievements</div>
+                    {resume?.content.awards?.map((award, idx) => (
+                      <div key={idx} className="mb-2">
+                        <div className="font-semibold text-blue-700 underline text-[15px]">{award.award}</div>
+                        <div className="text-xs text-gray-500">{award.date}</div>
+                        <div className="text-[15px]">{award.description}</div>
                       </div>
-                      <div className="mb-4">
-                        <h2 className="text-lg font-semibold mb-1">Education</h2>
-                        {resume?.content.education && resume.content.education.length > 0 ? (
-                          resume.content.education.map((edu, idx) => (
-                            <div key={idx} className="mb-2">
-                              <div className="font-semibold">{edu.degree} in {edu.field}</div>
-                              <div className="text-xs text-gray-500">{edu.school} ({edu.startDate} - {edu.endDate})</div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-gray-400">No education added.</div>
-                        )}
+                    ))}
+
+                    {/* EDUCATION */}
+                    <div className="uppercase font-bold text-gray-900 tracking-wider text-base mt-8 mb-2 border-b border-gray-300 pb-1">Education</div>
+                    {resume?.content.education?.map((edu, idx) => (
+                      <div key={idx} className="flex justify-between mb-2">
+                        <div>
+                          <div className="font-semibold text-[15px]">{edu.degree} in {edu.field}</div>
+                          <div className="text-gray-700 text-xs">{edu.school}</div>
+                        </div>
+                        <div className="text-xs text-gray-500 whitespace-nowrap">{edu.startDate} — {edu.endDate}</div>
                       </div>
-                      <div className="mb-4">
-                        <h2 className="text-lg font-semibold mb-1">Projects</h2>
-                        {resume?.content.projects && resume.content.projects.length > 0 ? (
-                          resume.content.projects.map((project, idx) => (
-                            <div key={idx} className="mb-2">
-                              <div className="font-semibold">{project.title}</div>
-                              <div className="text-xs text-gray-500">{project.startDate} - {project.endDate}</div>
-                              <div>{project.description}</div>
-                              {project.url && (
-                                <a href={project.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                  View Project
-                                </a>
-                              )}
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-gray-400">No projects added.</div>
-                        )}
-                      </div>
-                      <div className="mb-4">
-                        <h2 className="text-lg font-semibold mb-1">Certifications</h2>
-                        {resume?.content.certifications && resume.content.certifications.length > 0 ? (
-                          resume.content.certifications.map((cert, idx) => (
-                            <div key={idx} className="mb-2">
-                              <div className="font-semibold">{cert.name}</div>
-                              <div className="text-xs text-gray-500">{cert.issuer} - {cert.date}</div>
-                              {cert.url && (
-                                <a href={cert.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                  View Certificate
-                                </a>
-                              )}
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-gray-400">No certifications added.</div>
-                        )}
-                      </div>
-                      <div className="mb-4">
-                        <h2 className="text-lg font-semibold mb-1">Awards</h2>
-                        {resume?.content.awards && resume.content.awards.length > 0 ? (
-                          resume.content.awards.map((award, idx) => (
-                            <div key={idx} className="mb-2">
-                              <div className="font-semibold">{award.award}</div>
-                              <div className="text-xs text-gray-500">{award.date}</div>
-                              <div>{award.description}</div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-gray-400">No awards added.</div>
-                        )}
-                      </div>
-                      <div>
-                        <h2 className="text-lg font-semibold mb-1">Skills</h2>
-                        <div>{resume?.content.skills && resume.content.skills.length > 0 ? resume.content.skills.join(', ') : "No skills added."}</div>
-                      </div>
-                    </>
-                  )}
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
