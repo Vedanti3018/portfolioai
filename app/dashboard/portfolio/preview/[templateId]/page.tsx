@@ -449,8 +449,8 @@ export default function PortfolioEditorPage() {
         certifications: portfolioData.certifications,
       });
 
-      // Send relevant portfolio data to an API route for summary generation
-      const response = await fetch('/api/generate-summary', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${apiUrl}/generate-summary`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

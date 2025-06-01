@@ -78,6 +78,8 @@ export default function ResumePreviewPage({ params }: { params: { templateId: st
     skills: true
   });
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -164,7 +166,7 @@ export default function ResumePreviewPage({ params }: { params: { templateId: st
 
   const handleDownload = async () => {
     try {
-      const response = await fetch('/api/generate-resume-pdf', {
+      const response = await fetch(`${apiUrl}/generate-resume-pdf`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

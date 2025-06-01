@@ -35,6 +35,7 @@ export default function CoverLettersPage() {
   });
   const today = new Date().toLocaleDateString();
   const coverLetterRef = useRef(coverLetter);
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     console.log('[CoverLetter] Component mounted');
@@ -110,7 +111,7 @@ export default function CoverLettersPage() {
           console.log('[CoverLetter] FormData entry:', key, value);
         }
         console.log('[CoverLetter] Sending FormData with file:', resumeFile.name);
-        const res = await fetch('/api/generate-cover-letter', {
+        const res = await fetch(`${apiUrl}/generate-cover-letter`, {
           method: 'POST',
           body: formData,
         });
@@ -158,7 +159,7 @@ export default function CoverLettersPage() {
       };
       console.log('[CoverLetter] Sending payload:', payload);
       console.log('[CoverLetter] About to fetch');
-      const res = await fetch('/api/generate-cover-letter', {
+      const res = await fetch(`${apiUrl}/generate-cover-letter`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

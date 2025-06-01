@@ -1,10 +1,12 @@
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
 export async function generateResumeFromFile(
   fileUrl: string,
   jobTitle: string,
   jobDescription: string,
   userId: string
 ) {
-  const response = await fetch('/api/generate-resume', {
+  const response = await fetch(`${apiUrl}/generate-resume`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -22,5 +24,14 @@ export async function generateResumeFromFile(
     throw new Error(error.message || 'Failed to generate resume');
   }
 
+  return response.json();
+}
+
+export async function generateResume(data) {
+  const response = await fetch(`${apiUrl}/generate-resume`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
   return response.json();
 } 

@@ -13,26 +13,55 @@ except ImportError:
     pdfplumber = None
     Document = None
 
-try:
-    from groq import Groq
-except ImportError:
-    print("[ERROR] groq package not installed. Please run: pip install groq", file=sys.stderr)
-    sys.exit(1)
+def generate_cover_letter_api(resume_text, job_description, full_name='', email='', address='', phone='', date='', hiring_manager='', hiring_title='', company='', company_address=''):
+    load_dotenv()
+    try:
+        from groq import Groq
+    except ImportError:
+        raise ImportError("groq package not installed. Please run: pip install groq")
+    groq_api_key = os.getenv('GROQ_API_KEY')
+    if not groq_api_key:
+        raise RuntimeError('GROQ_API_KEY not found in environment.')
+    today = date or datetime.now().strftime('%B %d, %Y')
+    prompt = f"""
+You are a professional career assistant. Write a tailored, compelling cover letter for the following job application. Use the provided resume to highlight the most relevant skills and experience. The cover letter should be professional, concise, and specific to the job description. Address the company and job title if possible.
 
-def extract_text_from_file(file_path):
-    ext = os.path.splitext(file_path)[1].lower()
-    print(f"[DEBUG] File path: {file_path}, Extension: {ext}", file=sys.stderr)
-    if ext == '.pdf' and pdfplumber:
-        print("[DEBUG] Attempting to open PDF with pdfplumber", file=sys.stderr)
-        with pdfplumber.open(file_path) as pdf:
-            return '\n'.join(page.extract_text() or '' for page in pdf.pages)
-    elif ext in ['.doc', '.docx'] and Document:
-        print("[DEBUG] Attempting to open DOCX with python-docx", file=sys.stderr)
-        doc = Document(file_path)
-        return '\n'.join([para.text for para in doc.paragraphs])
-    else:
-        print(f"[ERROR] Unsupported file type or missing dependencies for: {file_path}", file=sys.stderr)
-        sys.exit(1)
+Applicant Information:
+Name: {full_name}
+Address: {address}
+Phone: {phone}
+Email: {email}
+Date: {today}
+
+[If available]
+Hiring Manager: {hiring_manager}
+Hiring Manager Title: {hiring_title}
+Company: {company}
+Company Address: {company_address}
+
+Resume:
+{resume_text}
+
+Job Description:
+{job_description}
+
+Cover Letter:
+"""
+    try:
+        client = Groq(api_key=groq_api_key)
+        completion = client.chat.completions.create(
+            model="gemma2-9b-it",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant for job seekers."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=800,
+            temperature=0.7,
+        )
+        cover_letter = completion.choices[0].message.content.strip()
+        return cover_letter
+    except Exception as e:
+        raise RuntimeError(f"Failed to generate cover letter: {e}")
 
 def main():
     parser = argparse.ArgumentParser(description="Generate a cover letter using resume and job description via GROQ API.")
@@ -52,59 +81,38 @@ def main():
 
     # Load .env
     load_dotenv()
-    groq_api_key = os.getenv('GROQ_API_KEY')
-    if not groq_api_key:
-        print('[ERROR] GROQ_API_KEY not found in environment.', file=sys.stderr)
-        sys.exit(1)
 
     # Get resume text
     resume_text = args.resume_text
     if not resume_text and args.resume_file:
-        resume_text = extract_text_from_file(args.resume_file)
+        from docx import Document
+        ext = os.path.splitext(args.resume_file)[1].lower()
+        if ext == '.pdf':
+            with pdfplumber.open(args.resume_file) as pdf:
+                resume_text = '\n'.join(page.extract_text() or '' for page in pdf.pages)
+        elif ext in ['.doc', '.docx']:
+            doc = Document(args.resume_file)
+            resume_text = '\n'.join([para.text for para in doc.paragraphs])
+        else:
+            print(f"[ERROR] Unsupported file type or missing dependencies for: {args.resume_file}", file=sys.stderr)
+            sys.exit(1)
     if not resume_text:
         print('[ERROR] No resume text provided or extracted.', file=sys.stderr)
         sys.exit(1)
-
-    # Compose prompt
-    today = args.date or datetime.now().strftime('%B %d, %Y')
-    prompt = f"""
-You are a professional career assistant. Write a tailored, compelling cover letter for the following job application. Use the provided resume to highlight the most relevant skills and experience. The cover letter should be professional, concise, and specific to the job description. Address the company and job title if possible.
-
-Applicant Information:
-Name: {args.full_name}
-Address: {args.address}
-Phone: {args.phone}
-Email: {args.email}
-Date: {today}
-
-[If available]
-Hiring Manager: {args.hiring_manager}
-Hiring Manager Title: {args.hiring_title}
-Company: {args.company}
-Company Address: {args.company_address}
-
-Resume:
-{resume_text}
-
-Job Description:
-{args.job_description}
-
-Cover Letter:
-"""
-
-    # Call GROQ API using the SDK
     try:
-        client = Groq(api_key=groq_api_key)
-        completion = client.chat.completions.create(
-            model="gemma2-9b-it",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant for job seekers."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=800,
-            temperature=0.7,
+        cover_letter = generate_cover_letter_api(
+            resume_text=resume_text,
+            job_description=args.job_description,
+            full_name=args.full_name,
+            email=args.email,
+            address=args.address,
+            phone=args.phone,
+            date=args.date,
+            hiring_manager=args.hiring_manager,
+            hiring_title=args.hiring_title,
+            company=args.company,
+            company_address=args.company_address
         )
-        cover_letter = completion.choices[0].message.content.strip()
         print(json.dumps({"cover_letter": cover_letter}))
     except Exception as e:
         print(f"[ERROR] Failed to generate cover letter: {e}", file=sys.stderr)

@@ -16,6 +16,8 @@ export default function AiPromptPage() {
   const [loading, setLoading] = useState(false);
   const [userInfo, setUserInfo] = useState<{ name: string; email: string } | null>(null);
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
   useEffect(() => {
     const fetchUserInfo = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -51,7 +53,7 @@ export default function AiPromptPage() {
         return;
       }
 
-      const response = await fetch('/api/generate-resume', {
+      const response = await fetch(`${apiUrl}/generate-resume`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
