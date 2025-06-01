@@ -86,8 +86,8 @@ export default function ReviewPage() {
           return;
         }
 
-        setResumeData(data.parsed_data);
         console.log('Set resumeData:', data.parsed_data);
+        setResumeData(data.parsed_data);
       } catch (error) {
         console.error('Error fetching draft data:', error);
         toast.error('Failed to load resume data');
