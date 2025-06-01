@@ -50,7 +50,7 @@ export default function Navbar({ showAuthButtons = true }: NavbarProps) {
     try {
       await supabase.auth.signOut();
       toast.success('Logged out successfully');
-      router.push('/');
+      window.location.href = process.env.NEXT_PUBLIC_SITE_URL || '/';
     } catch (error) {
       toast.error('Error logging out');
     }

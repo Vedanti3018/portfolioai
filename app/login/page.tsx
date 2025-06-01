@@ -30,7 +30,14 @@ export default function LoginPage() {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message === "Invalid login credentials") {
+          toast.error("Incorrect email or password. Please try again.");
+        } else {
+          toast.error('Failed to login');
+        }
+        return;
+      }
 
       toast.success('Logged in successfully');
       router.push('/dashboard');
@@ -48,7 +55,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth-callback`,
+          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth-callback`,
         },
       });
 
