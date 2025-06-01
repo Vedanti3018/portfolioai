@@ -242,7 +242,8 @@ const ensureDefinedPortfolioData = (data: any): PortfolioData => ({
 });
 
 export default function PortfolioEditorPage() {
-  const { templateId } = useParams();
+  const params = useParams();
+  const templateId = params?.templateId as string;
   const router = useRouter();
   const supabase = createClientComponentClient();
 

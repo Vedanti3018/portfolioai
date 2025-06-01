@@ -12,8 +12,8 @@ import { Label } from '@/components/ui/label';
 import { ChevronDown, ChevronUp, Download, Save, ArrowLeft, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function EditOptimizedResumePage({ params }: { params: Promise<{ optimizationId: string }> }) {
-  const { optimizationId } = use(params);
+export default function EditOptimizedResumePage({ params }: { params: { optimizationId: string } }) {
+  const { optimizationId } = params;
   const router = useRouter();
   const supabase = createClientComponentClient();
   const [loading, setLoading] = useState(true);

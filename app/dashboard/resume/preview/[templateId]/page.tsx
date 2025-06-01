@@ -64,8 +64,7 @@ const defaultResumeData: ResumeData = {
   is_primary: false
 };
 
-export default function ResumePreviewPage({ params }: { params: Promise<{ templateId: string }> }) {
-  const resolvedParams = use(params);
+export default function ResumePreviewPage({ params }: { params: { templateId: string } }) {
   const router = useRouter();
   const supabase = createClientComponentClient();
   const [loading, setLoading] = useState(true);
@@ -171,7 +170,7 @@ export default function ResumePreviewPage({ params }: { params: Promise<{ templa
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          templateId: resolvedParams.templateId,
+          templateId: params.templateId,
           resumeData
         }),
       });
@@ -345,7 +344,7 @@ export default function ResumePreviewPage({ params }: { params: Promise<{ templa
               Resume Editor
             </h1>
             <p className="text-gray-400">
-              Template: {resolvedParams.templateId.split('-').map(word => 
+              Template: {params.templateId.split('-').map(word => 
                 word.charAt(0).toUpperCase() + word.slice(1)
               ).join(' ')}
             </p>
@@ -358,7 +357,7 @@ export default function ResumePreviewPage({ params }: { params: Promise<{ templa
               Resume Editor
             </h1>
             <p className="text-gray-400">
-              Template: {resolvedParams.templateId.split('-').map(word => 
+              Template: {params.templateId.split('-').map(word => 
                 word.charAt(0).toUpperCase() + word.slice(1)
               ).join(' ')}
             </p>
@@ -671,7 +670,7 @@ export default function ResumePreviewPage({ params }: { params: Promise<{ templa
             </h2>
             <div className="bg-white rounded-lg p-8">
               <iframe
-                src={`/api/preview-resume?templateId=${resolvedParams.templateId}&resumeData=${encodeURIComponent(JSON.stringify(resumeData))}`}
+                src={`/api/preview-resume?templateId=${params.templateId}&resumeData=${encodeURIComponent(JSON.stringify(resumeData))}`}
                 className="w-full h-[800px] border-none"
                 title="Resume Preview"
               />
