@@ -1,42 +1,51 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import Handlebars from 'handlebars';
 import fs from 'fs';
 import path from 'path';
-import { compile } from 'handlebars';
+
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const templateId = searchParams.get('templateId');
-    const resumeData = searchParams.get('resumeData');
+    const resumeId = searchParams.get('resumeId');
 
-    if (!templateId) {
-      return new NextResponse('Template ID is required', { status: 400 });
+    if (!templateId || !resumeId) {
+      return NextResponse.json(
+        { error: 'Missing templateId or resumeId' },
+        { status: 400 }
+      );
     }
 
-    // Get the user's session
-    const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session } } = await supabase.auth.getSession();
+    // Fetch resume data
+    const { data: resume, error: resumeError } = await supabase
+      .from('resumes')
+      .select('*')
+      .eq('id', resumeId)
+      .single();
 
-    if (!session) {
-      return new NextResponse('Unauthorized', { status: 401 });
+    if (resumeError || !resume) {
+      return NextResponse.json(
+        { error: 'Resume not found' },
+        { status: 404 }
+      );
     }
 
-    // Load the template HTML
-    const templatePath = path.join(process.cwd(), 'resume-templates', `${templateId}.html`);
+    // Read template file
+    const templatePath = path.join(process.cwd(), 'portfolio-templates', `${templateId}.html`);
     const templateContent = fs.readFileSync(templatePath, 'utf-8');
 
-    // Compile the template
-    const template = compile(templateContent);
+    // Compile template
+    const template = Handlebars.compile(templateContent);
+    const html = template(resume);
 
-    // Parse the resume data
-    const parsedResumeData = resumeData ? JSON.parse(decodeURIComponent(resumeData)) : null;
-
-    // Render the template with the resume data
-    const html = template(parsedResumeData || {});
-
-    // Return the rendered HTML
     return new NextResponse(html, {
       headers: {
         'Content-Type': 'text/html',
@@ -44,7 +53,10 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error('Error generating resume preview:', error);
-    return new NextResponse('Error generating resume preview', { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to generate preview' },
+      { status: 500 }
+    );
   }
 }
 
