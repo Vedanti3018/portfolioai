@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import requests
 from io import BytesIO
 import pdfplumber
+from urllib.parse import urlparse
 
 # Configure logging
 logging.basicConfig(
@@ -24,21 +25,42 @@ except ImportError:
     logger.error("groq package not installed. Please run: pip install groq")
     sys.exit(1)
 
-def extract_text_from_url(pdf_url):
+def get_file_content(file_path_or_url: str) -> BytesIO:
+    """Get file content from local path or URL."""
+    logger.info(f"Getting content from: {file_path_or_url}")
+    
+    if file_path_or_url.startswith(('http://', 'https://')):
+        try:
+            response = requests.get(file_path_or_url)
+            response.raise_for_status()
+            return BytesIO(response.content)
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error fetching URL: {str(e)}")
+            raise RuntimeError(f"Failed to fetch URL: {str(e)}")
+    else:
+        try:
+            with open(file_path_or_url, 'rb') as f:
+                return BytesIO(f.read())
+        except IOError as e:
+            logger.error(f"Error reading file: {str(e)}")
+            raise RuntimeError(f"Failed to read file: {str(e)}")
+
+def extract_text_from_pdf(file_path_or_url: str) -> str:
+    """Extract text from a PDF file or URL."""
+    logger.info(f"Extracting text from PDF: {file_path_or_url}")
+    
     try:
-        response = requests.get(pdf_url)
-        response.raise_for_status()
-        pdf_file = BytesIO(response.content)
+        file_content = get_file_content(file_path_or_url)
         full_text = ""
-        with pdfplumber.open(pdf_file) as pdf:
+        with pdfplumber.open(file_content) as pdf:
             for page in pdf.pages:
                 text = page.extract_text()
                 if text:
                     full_text += text + "\n"
         return full_text.strip()
     except Exception as e:
-        logger.error(f"Failed to extract text from URL: {str(e)}")
-        return None
+        logger.error(f"Failed to extract text from PDF: {str(e)}")
+        raise
 
 def clean_json_string(json_str):
     """Clean and parse JSON string, handling common LLM output issues."""
@@ -162,7 +184,7 @@ def main():
     parser = argparse.ArgumentParser(description="Analyze and optimize a resume against a job description.")
     parser.add_argument('--resume_text', type=str, help='Resume text to analyze')
     parser.add_argument('--job_description', type=str, required=True, help='Job description to compare against')
-    parser.add_argument('--url', type=str, help='URL of the PDF file to extract resume text from')
+    parser.add_argument('--resume_file', type=str, help='Path or URL to the PDF file to extract resume text from')
     args = parser.parse_args()
 
     logger.info("Starting resume optimization process")
@@ -176,16 +198,16 @@ def main():
     resume_text = None
     if args.resume_text:
         resume_text = args.resume_text
-    elif args.url:
-        logger.info(f"Extracting resume text from URL: {args.url}")
-        resume_text = extract_text_from_url(args.url)
+    elif args.resume_file:
+        logger.info(f"Extracting resume text from: {args.resume_file}")
+        resume_text = extract_text_from_pdf(args.resume_file)
         if not resume_text:
-            error_msg = 'Failed to extract text from PDF URL.'
+            error_msg = 'Failed to extract text from PDF.'
             logger.error(error_msg)
             print(json.dumps({'error': error_msg}))
             sys.exit(1)
     else:
-        error_msg = 'Either --resume_text or --url must be provided.'
+        error_msg = 'Either --resume_text or --resume_file must be provided.'
         logger.error(error_msg)
         print(json.dumps({'error': error_msg}))
         sys.exit(1)

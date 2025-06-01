@@ -86,8 +86,8 @@ export async function POST(request: Request) {
       body: JSON.stringify({ file_path: publicUrl })
     });
     if (!response.ok) {
-      console.error('Hugging Face API returned error:', response.status);
       const errorData = await response.json().catch(() => ({}));
+      console.error('Hugging Face API error:', errorData);
       return NextResponse.json(
         { error: errorData.error || 'Failed to process resume with Hugging Face API' },
         { status: 500 }

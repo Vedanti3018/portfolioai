@@ -4,6 +4,7 @@ import tempfile
 import json
 import requests
 import logging
+from io import BytesIO
 from urllib.parse import urlparse
 from typing import Dict, Any, Optional
 
@@ -21,38 +22,42 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def download_file(url: str) -> str:
-    """Download a file from URL and return the local path."""
-    logger.info(f"Downloading file from URL: {url}")
-    local_filename = os.path.join(tempfile.gettempdir(), os.path.basename(urlparse(url).path))
+def get_file_content(file_path_or_url: str) -> tuple[BytesIO, str]:
+    """Get file content from local path or URL."""
+    logger.info(f"Getting content from: {file_path_or_url}")
     
-    try:
-        with requests.get(url, stream=True) as r:
-            r.raise_for_status()
-            with open(local_filename, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    f.write(chunk)
-        logger.info(f"File downloaded successfully to: {local_filename}")
-        return local_filename
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error downloading file: {str(e)}")
-        raise RuntimeError(f"Failed to download file: {str(e)}")
+    if file_path_or_url.startswith(('http://', 'https://')):
+        try:
+            response = requests.get(file_path_or_url)
+            response.raise_for_status()
+            return BytesIO(response.content), os.path.splitext(urlparse(file_path_or_url).path)[1].lower()
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error fetching URL: {str(e)}")
+            raise RuntimeError(f"Failed to fetch URL: {str(e)}")
+    else:
+        try:
+            with open(file_path_or_url, 'rb') as f:
+                return BytesIO(f.read()), os.path.splitext(file_path_or_url)[1].lower()
+        except IOError as e:
+            logger.error(f"Error reading file: {str(e)}")
+            raise RuntimeError(f"Failed to read file: {str(e)}")
 
-def extract_text(file_path: str) -> str:
-    """Extract text from PDF, DOC, or DOCX file."""
-    logger.info(f"Extracting text from file: {file_path}")
-    ext = os.path.splitext(file_path)[1].lower()
-    
-    if ext not in ['.pdf', '.doc', '.docx']:
-        error_msg = f'Unsupported file type: {ext}'
-        logger.error(error_msg)
-        raise ValueError(error_msg)
+def extract_text(file_path_or_url: str) -> str:
+    """Extract text from PDF, DOC, or DOCX file or URL."""
+    logger.info(f"Extracting text from: {file_path_or_url}")
     
     try:
+        file_content, ext = get_file_content(file_path_or_url)
+        
+        if ext not in ['.pdf', '.doc', '.docx']:
+            error_msg = f'Unsupported file type: {ext}'
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        
         if ext == '.pdf':
             # Use PyPDF2 for PDF files
             logger.info("Processing PDF file with PyPDF2")
-            reader = PdfReader(file_path)
+            reader = PdfReader(file_content)
             text = ""
             for i, page in enumerate(reader.pages, 1):
                 page_text = page.extract_text()
@@ -63,9 +68,16 @@ def extract_text(file_path: str) -> str:
         else:
             # Use textract for DOC/DOCX files
             logger.info("Processing DOC/DOCX file with textract")
-            return textract.process(file_path).decode('utf-8')
+            # Save to temporary file for textract
+            with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as temp_file:
+                temp_file.write(file_content.getvalue())
+                temp_file.flush()
+                try:
+                    return textract.process(temp_file.name).decode('utf-8')
+                finally:
+                    os.unlink(temp_file.name)
     except Exception as e:
-        error_msg = f'Error extracting text from {file_path}: {str(e)}'
+        error_msg = f'Error extracting text from {file_path_or_url}: {str(e)}'
         logger.error(error_msg)
         raise RuntimeError(error_msg)
 
@@ -233,63 +245,38 @@ Remember: Respond with ONLY the JSON object, no other text or explanation. Do NO
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description='Generate structured resume JSON from file or prompt and job info using Groq.')
-    parser.add_argument('--file', help='Path or URL to the resume file (PDF, DOC, DOCX)')
-    parser.add_argument('--prompt', required=True, help='Raw resume prompt text')
-    parser.add_argument('--job_title', help='Target job title (for file-based enhancement)')
-    parser.add_argument('--job_description', help='Target job description (for file-based enhancement)')
-    parser.add_argument('--user_name', help='User name (for prompt-based generation)')
-    parser.add_argument('--user_email', help='User email (for prompt-based generation)')
+    parser = argparse.ArgumentParser(description="Generate a resume from a file (PDF, DOC, DOCX) or job title.")
+    parser.add_argument('--file', type=str, help='Path or URL to the resume file (PDF, DOC, DOCX)')
+    parser.add_argument('--job_title', type=str, help='Target job title (for enhancement)')
+    parser.add_argument('--job_description', type=str, help='Target job description (for enhancement)')
+    parser.add_argument('--user_name', type=str, help='User name (for prompt-based generation)')
+    parser.add_argument('--user_email', type=str, help='User email (for prompt-based generation)')
     args = parser.parse_args()
 
-    logger.info("Starting resume generation process")
-    logger.info(f"Input file: {args.file}")
-    logger.info(f"Prompt: {args.prompt}")
-    logger.info(f"Job title: {args.job_title}")
-    logger.info(f"User name: {args.user_name}")
-
-    extracted_text = None
-    cleanup = False
-    file_path = None
-
     if args.file:
-        # Download if URL
-        if args.file.startswith('http://') or args.file.startswith('https://'):
-            file_path = download_file(args.file)
-            cleanup = True
-        else:
-            file_path = args.file
-            cleanup = False
-        try:
-            extracted_text = extract_text(file_path)
-            logger.info("Text extraction completed successfully")
-        except Exception as e:
-            logger.error(f"Error extracting text: {str(e)}")
-            sys.exit(1)
+        extracted_text = extract_text(args.file)
+    elif args.job_title:
+        extracted_text = args.job_title
     else:
-        extracted_text = args.prompt
-        logger.info('Using prompt as resume content.')
+        print('[ERROR] No file or job title provided.', file=sys.stderr)
+        sys.exit(1)
 
     try:
         resume_json = call_groq_api(
-            extracted_text,
+            extracted_text=extracted_text,
             job_title=args.job_title,
             job_description=args.job_description,
             user_name=args.user_name,
             user_email=args.user_email
         )
-        logger.info("Resume JSON generation completed successfully")
-        print(json.dumps(resume_json, indent=2))
+        if validate_resume_json(resume_json):
+            print(json.dumps(resume_json, indent=2))
+        else:
+            print('[ERROR] Invalid resume JSON structure.', file=sys.stderr)
+            sys.exit(1)
     except Exception as e:
-        logger.error(f"Error in main process: {str(e)}")
+        print(f"[ERROR] Failed to generate resume: {e}", file=sys.stderr)
         sys.exit(1)
-    finally:
-        if cleanup and file_path:
-            try:
-                os.remove(file_path)
-                logger.info(f"Cleaned up temporary file: {file_path}")
-            except Exception as e:
-                logger.error(f"Error cleaning up temporary file: {str(e)}")
 
 if __name__ == '__main__':
     main() 

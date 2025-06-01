@@ -2,8 +2,11 @@ import argparse
 import os
 import sys
 import json
+import tempfile
+import requests
 from dotenv import load_dotenv
 from datetime import datetime
+from urllib.parse import urlparse
 
 # Optional: for file extraction
 try:
@@ -12,6 +15,43 @@ try:
 except ImportError:
     pdfplumber = None
     Document = None
+
+def download_to_tempfile(url: str) -> str:
+    """Download a file from URL to a temp file and return the path."""
+    local_filename = os.path.join(tempfile.gettempdir(), os.path.basename(urlparse(url).path))
+    try:
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            with open(local_filename, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        return local_filename
+    except requests.exceptions.RequestException as e:
+        print(f"[ERROR] Failed to download file: {str(e)}", file=sys.stderr)
+        sys.exit(1)
+
+def extract_resume_text(file_path: str) -> str:
+    """Extract text from PDF or DOCX file."""
+    ext = os.path.splitext(file_path)[1].lower()
+    try:
+        if ext == '.pdf':
+            if not pdfplumber:
+                print("[ERROR] pdfplumber is not installed.", file=sys.stderr)
+                sys.exit(1)
+            with pdfplumber.open(file_path) as pdf:
+                return '\n'.join(page.extract_text() or '' for page in pdf.pages)
+        elif ext in ['.doc', '.docx']:
+            if not Document:
+                print("[ERROR] python-docx is not installed.", file=sys.stderr)
+                sys.exit(1)
+            doc = Document(file_path)
+            return '\n'.join([para.text for para in doc.paragraphs])
+        else:
+            print(f"[ERROR] Unsupported file type: {ext}", file=sys.stderr)
+            sys.exit(1)
+    except Exception as e:
+        print(f"[ERROR] Failed to extract text: {str(e)}", file=sys.stderr)
+        sys.exit(1)
 
 def generate_cover_letter_api(resume_text, job_description, full_name='', email='', address='', phone='', date='', hiring_manager='', hiring_title='', company='', company_address=''):
     load_dotenv()
@@ -66,7 +106,7 @@ Cover Letter:
 def main():
     parser = argparse.ArgumentParser(description="Generate a cover letter using resume and job description via GROQ API.")
     parser.add_argument('--resume_text', type=str, help='Resume text (if already extracted)')
-    parser.add_argument('--resume_file', type=str, help='Path to resume file (PDF, DOCX)')
+    parser.add_argument('--resume_file', type=str, help='Path or URL to resume file (PDF, DOCX)')
     parser.add_argument('--job_description', type=str, required=True, help='Job description text')
     parser.add_argument('--full_name', type=str, default='', help='Applicant full name')
     parser.add_argument('--email', type=str, default='', help='Applicant email')
@@ -79,23 +119,16 @@ def main():
     parser.add_argument('--company_address', type=str, default='', help='Company address')
     args = parser.parse_args()
 
-    # Load .env
     load_dotenv()
 
-    # Get resume text
     resume_text = args.resume_text
+    temp_file = None
     if not resume_text and args.resume_file:
-        from docx import Document
-        ext = os.path.splitext(args.resume_file)[1].lower()
-        if ext == '.pdf':
-            with pdfplumber.open(args.resume_file) as pdf:
-                resume_text = '\n'.join(page.extract_text() or '' for page in pdf.pages)
-        elif ext in ['.doc', '.docx']:
-            doc = Document(args.resume_file)
-            resume_text = '\n'.join([para.text for para in doc.paragraphs])
-        else:
-            print(f"[ERROR] Unsupported file type or missing dependencies for: {args.resume_file}", file=sys.stderr)
-            sys.exit(1)
+        file_path = args.resume_file
+        if file_path.startswith('http://') or file_path.startswith('https://'):
+            file_path = download_to_tempfile(file_path)
+            temp_file = file_path  # Remember to clean up
+        resume_text = extract_resume_text(file_path)
     if not resume_text:
         print('[ERROR] No resume text provided or extracted.', file=sys.stderr)
         sys.exit(1)
@@ -117,6 +150,12 @@ def main():
     except Exception as e:
         print(f"[ERROR] Failed to generate cover letter: {e}", file=sys.stderr)
         sys.exit(1)
+    finally:
+        if temp_file and os.path.exists(temp_file):
+            try:
+                os.remove(temp_file)
+            except Exception:
+                pass
 
 if __name__ == '__main__':
     main() 

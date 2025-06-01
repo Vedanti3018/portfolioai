@@ -3,6 +3,8 @@ import os
 import sys
 import logging
 from dotenv import load_dotenv
+import requests
+from io import BytesIO
 
 # Configure logging
 logging.basicConfig(
@@ -25,17 +27,25 @@ def extract_text_from_pdf(file_path):
     logger.info(f"Extracting text from PDF: {file_path}")
     
     try:
-        with open(file_path, 'rb') as file:
-            # Create PDF reader object
-            pdf_reader = PyPDF2.PdfReader(file)
-            
-            # Extract text from each page
-            text = ''
-            for page in pdf_reader.pages:
-                text += page.extract_text() + '\n'
-            
-            logger.info("Successfully extracted text from PDF")
-            return text.strip()
+        if file_path.startswith('http://') or file_path.startswith('https://'):
+            # Download the file from the URL
+            response = requests.get(file_path)
+            response.raise_for_status()
+            file = BytesIO(response.content)
+        else:
+            # Local file
+            file = open(file_path, 'rb')
+        
+        # Create PDF reader object
+        pdf_reader = PyPDF2.PdfReader(file)
+        
+        # Extract text from each page
+        text = ''
+        for page in pdf_reader.pages:
+            text += page.extract_text() + '\n'
+        
+        logger.info("Successfully extracted text from PDF")
+        return text.strip()
             
     except Exception as e:
         logger.error(f"Failed to extract text from PDF: {str(e)}")

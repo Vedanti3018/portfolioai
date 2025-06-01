@@ -27,7 +27,7 @@ export async function generateResumeFromFile(
   return response.json();
 }
 
-export async function generateResume(data) {
+export async function generateResume(data: any) {
   const response = await fetch(`${apiUrl}/generate-resume`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
