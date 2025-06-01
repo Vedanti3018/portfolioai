@@ -104,11 +104,10 @@ export default function OptimizerResultPage() {
                     ? result.suggestions.map((s: string, i: number) => <li key={i}>{s}</li>)
                     : result.suggestions
                         .split(/\n|•|-|•/) // handle newlines or bullet points
-                        .filter(line => line.trim() !== '')
+                        .filter((line: string) => line.trim() !== '')
                         .map((s: string, i: number) => <li key={i}>{s.trim()}</li>)}
-                </ul>
+              </ul>
             </div>
-
           )}
         </div>
         <div className="flex justify-center">
