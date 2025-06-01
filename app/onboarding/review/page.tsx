@@ -79,6 +79,7 @@ export default function ReviewPage() {
           .eq('id', session.user.id)
           .single();
 
+        console.log('Fetched onboarding_drafts data:', data);
         if (error) throw error;
         if (!data) {
           router.push('/onboarding');
@@ -86,6 +87,7 @@ export default function ReviewPage() {
         }
 
         setResumeData(data.parsed_data);
+        console.log('Set resumeData:', data.parsed_data);
       } catch (error) {
         console.error('Error fetching draft data:', error);
         toast.error('Failed to load resume data');
@@ -315,6 +317,8 @@ export default function ReviewPage() {
       </div>
     );
   }
+
+  console.log('Rendering ReviewPage with resumeData:', resumeData);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#18181b] via-[#101014] to-[#23232a] p-4">
