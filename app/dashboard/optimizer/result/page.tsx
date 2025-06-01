@@ -9,7 +9,7 @@ import jsPDF from 'jspdf';
 
 export default function OptimizerResultPage() {
   const searchParams = useSearchParams();
-  const optimizationId = searchParams.get('optimizationId');
+  const optimizationId = searchParams?.get('optimizationId') ?? null;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
