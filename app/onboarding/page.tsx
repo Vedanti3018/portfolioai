@@ -100,7 +100,7 @@ export default function OnboardingPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <CardContent className="p-8 space-y-7 text-white">
+        <CardContent className="p-8 space-y-7 text-white justify-center">
           <div className="flex flex-col items-center space-y-2 justify-center">
             <Image src="/logo.svg" alt="Brand Logo" width={48} height={48} className="mx-auto" />
             <h2 className="text-2xl font-semibold">Complete Your Profile</h2>
