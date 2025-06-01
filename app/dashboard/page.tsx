@@ -16,7 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const MotionCard = motion(Card);
 
 const sidebarItems = [
-  { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { name: 'Home', path: '/', icon: LayoutDashboard },
   { name: 'Portfolio', path: '/dashboard/portfolio', icon: Briefcase },
   { name: 'Resume', path: '/dashboard/resume', icon: FileText },
   { name: 'Cover Letters', path: '/dashboard/cover-letters', icon: Mail },
@@ -46,11 +46,17 @@ const features = [
     image: '/images/cover.png',
     link: '/dashboard/cover-letters'
   },
+  // {
+  //   title: 'Job-Opening Alert Engine',
+  //   description: 'Personalized job alerts via email & in-app.',
+  //   image: '/images/job-alerts.png',
+  //   link: '/dashboard/job-alerts'
+  // },
   {
-    title: 'Job-Opening Alert Engine',
-    description: 'Personalized job alerts via email & in-app.',
-    image: '/images/job-alerts.png',
-    link: '/dashboard/job-alerts'
+    title: 'Résumé / Portfolio Optimizer',
+    description: 'Real-time score, keyword gap analysis, and rewrite suggestions for your resume or portfolio.',
+    image: '/images/opyi.png',
+    link: '/dashboard/optimizer'
   },
 ];
 

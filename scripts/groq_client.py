@@ -6,6 +6,7 @@ import requests
 from io import BytesIO
 from groq import Groq
 from dotenv import load_dotenv
+import argparse
 
 load_dotenv()
 
@@ -130,24 +131,13 @@ Do not add extra explanations or comments. Output only the raw JSON.
             "error": str(e)
         }
 
+def main():
+    parser = argparse.ArgumentParser(description="Extract text from a PDF URL")
+    parser.add_argument('--url', type=str, required=True, help='URL of the PDF file')
+    args = parser.parse_args()
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print(json.dumps({
-            "success": False,
-            "error": "Please provide a PDF URL"
-        }))
-        sys.exit(1)
-        
-    pdf_url = sys.argv[1]
-    # pdf_url = "https://dpgqkccpercvfxutjfxe.supabase.co/storage/v1/object/public/resumes/8ed33051-0785-4aea-8f88-1b62b2f4ad23/1748172560939.pdf"
-    
-    # First extract text from PDF
-    pdf_result = extract_text_from_url(pdf_url)
-    if not pdf_result["success"]:
-        print(json.dumps(pdf_result))
-        sys.exit(1)
-        
-    # Then extract information using Groq
-    groq_result = extract_info_with_groq(pdf_result["text"])
-    print(json.dumps(groq_result)) 
+    result = extract_text_from_url(args.url)
+    print(json.dumps(result))
+
+if __name__ == '__main__':
+    main() 
