@@ -93,7 +93,7 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white pt-24">
+    <div className="min-h-screen bg-gradient-to-br from-[#18181b] via-[#101014] to-[#23232a] p-4 pt-24">
       <MotionCard
         className="w-full max-w-md border-none bg-[#18181b]/90 rounded-2xl shadow-2xl backdrop-blur-md"
         initial={{ opacity: 0, y: 30 }}
