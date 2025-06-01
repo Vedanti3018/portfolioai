@@ -34,6 +34,7 @@
     "framer-motion": "^10.18.0",
     "groq-sdk": "^0.22.0",
     "handlebars": "^4.7.8",
+    "is-disposable-email": "^0.0.1",
     "jspdf": "^3.0.1",
     "jszip": "^3.10.1",
     "lucide-react": "^0.323.0",

@@ -13,6 +13,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
+import isDisposableEmail from 'is-disposable-email';
 
 const MotionCard = motion(Card);
 
@@ -124,6 +125,12 @@ const SignUpPage: React.FC = () => {
     e.preventDefault();
     setLoading(true);
 
+    if (isDisposableEmail(email)) {
+      setErrorMsg('Invalid Email: Please use a real email address.');
+      setLoading(false);
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -136,7 +143,13 @@ const SignUpPage: React.FC = () => {
       if (error) throw error;
 
       toast.success('Check your email to confirm your account');
-      router.push('/login');
+      // After signup, check session and redirect if present
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        router.push('/dashboard');
+      } else {
+        router.push('/login');
+      }
     } catch (error) {
       console.error('Error:', error);
       toast.error('Failed to sign up');

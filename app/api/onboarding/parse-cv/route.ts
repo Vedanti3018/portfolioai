@@ -77,30 +77,24 @@ export async function POST(request: Request) {
     }
     console.log('Onboarding draft created/updated successfully');
 
-    // Get the host from the request URL
-    const url = new URL(request.url);
-    const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
-
-    // 🧠 Call Groq client with the resume URL
-    console.log('Calling Groq client to parse resume...');
-    const response = await fetch(`${protocol}://${url.host}/api/groq-client`, {
+    // Call Hugging Face API for resume parsing
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.HF_API_URL;
+    console.log('Calling Hugging Face API to parse resume...');
+    const response = await fetch(`${apiUrl}/extract-pdf`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`
-      },
-      body: JSON.stringify({
-        resumeUrl: publicUrl
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file_path: publicUrl })
     });
-
     if (!response.ok) {
-      console.error('Groq client returned error:', response.status);
-      throw new Error('Failed to process resume with Groq');
+      console.error('Hugging Face API returned error:', response.status);
+      const errorData = await response.json().catch(() => ({}));
+      return NextResponse.json(
+        { error: errorData.error || 'Failed to process resume with Hugging Face API' },
+        { status: 500 }
+      );
     }
-
     const extractedInfo = await response.json();
-    console.log('Resume parsed successfully by Groq client');
+    console.log('Resume parsed successfully by Hugging Face API');
 
     // 💾 Update onboarding_drafts with extracted info
     console.log('Updating onboarding draft with parsed data...');
