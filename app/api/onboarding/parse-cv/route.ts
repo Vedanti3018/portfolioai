@@ -23,6 +23,9 @@ export async function POST(request: Request) {
     // 📥 Get uploaded file
     const formData = await request.formData();
     const file = formData.get('file') as File;
+    const fileUrl = formData.get('file_url') as string;
+    const resumeId = formData.get('resume_id') as string;
+
     if (!file) {
       console.error('No file provided in request');
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
