@@ -34,7 +34,7 @@ const templates = [
   {
     id: 'creative',
     name: 'Creative',
-    fileName: 'creative-professional.html',
+    fileName: 'creative.html',
     thumbnail: '/templates/creative-professional.png',
   },
   {
@@ -780,7 +780,7 @@ export default function PortfolioEditorPage() {
 
       // Call the backend API to get the zip file for download
       console.log('[Download] Sending POST to /api/generate-portfolio with template:', selectedTemplate.fileName);
-      const response = await fetch(`/api/generate-portfolio?template=${selectedTemplate.fileName}`, {
+      const response = await fetch(`/api/generate-portfolio`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -788,7 +788,7 @@ export default function PortfolioEditorPage() {
         },
         body: JSON.stringify({
           portfolioData: savedPortfolio,
-          templateId: templateId
+          templateId: selectedTemplate.fileName.replace('.html', '')
         })
       });
       console.log('[Download] Response status:', response.status, response.statusText);
