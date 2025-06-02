@@ -43,22 +43,39 @@ export default function CoverLettersPage() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('full_name, email')
-          .eq('user_id', user.id)
-          .single();
-        if (!error && data) {
-          setProfile(data);
-          setFields(f => ({
-            ...f,
-            fullName: data.full_name || '',
-            email: data.email || '',
-            date: today,
-          }));
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError) {
+          console.error('[CoverLetter] Error fetching user:', userError);
+          return;
         }
+        
+        if (user) {
+          console.log('[CoverLetter] Fetching profile for user:', user.id);
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('full_name, email')
+            .eq('id', user.id)
+            .single();
+            
+          if (error) {
+            console.error('[CoverLetter] Error fetching profile:', error);
+            return;
+          }
+          
+          if (data) {
+            console.log('[CoverLetter] Profile data:', data);
+            setProfile(data);
+            setFields(f => ({
+              ...f,
+              fullName: data.full_name || '',
+              email: data.email || '',
+              date: today,
+            }));
+          }
+        }
+      } catch (err) {
+        console.error('[CoverLetter] Unexpected error in fetchProfile:', err);
       }
     };
     fetchProfile();
@@ -84,7 +101,7 @@ export default function CoverLettersPage() {
 
     try {
       // Get the current user
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (!user) {
         setError('You must be logged in to generate a cover letter');
         setLoading(false);
@@ -118,20 +135,53 @@ export default function CoverLettersPage() {
         });
 
         let data = null;
-        try {
-          data = await res.json();
-        } catch (e) {
-          console.error('[CoverLetter] Failed to parse response:', e);
-          setError('Failed to parse server response.');
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            data = await res.json();
+          } catch (e) {
+            console.error('[CoverLetter] Failed to parse JSON response:', e);
+            setError('Failed to parse server response.');
+            setLoading(false);
+            return;
+          }
+        } else {
+          const text = await res.text();
+          console.error('[CoverLetter] Received non-JSON response:', text);
+          setError('Server returned an invalid response format.');
           setLoading(false);
           return;
         }
 
         if (!res.ok) {
           console.error('[CoverLetter] Server error:', data);
-          setError(data.detail || data.error || 'Failed to generate cover letter');
+          setError(data?.detail || data?.error || 'Failed to generate cover letter');
           setLoading(false);
           return;
+        }
+
+        // Save the cover letter to Supabase
+        try {
+          const { error: saveError } = await supabase
+            .from('cover_letters')
+            .insert({
+              user_id: user.id,
+              title: `Cover Letter for ${fields.company || 'Job'}`,
+              content: data.cover_letter,
+              job_title: fields.hiringTitle,
+              company: fields.company,
+              job_description: jobDescription,
+              source_type: 'upload',
+              status: 'generated'
+            });
+
+          if (saveError) {
+            console.error('[CoverLetter] Error saving cover letter:', saveError);
+            // Don't show error to user since the cover letter was generated successfully
+          }
+        } catch (saveErr) {
+          console.error('[CoverLetter] Error saving cover letter:', saveErr);
+          // Don't show error to user since the cover letter was generated successfully
         }
 
         setCoverLetter(data.cover_letter);
@@ -171,20 +221,53 @@ export default function CoverLettersPage() {
       });
 
       let data = null;
-      try {
-        data = await res.json();
-      } catch (e) {
-        console.error('[CoverLetter] Failed to parse response:', e);
-        setError('Failed to parse server response.');
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          data = await res.json();
+        } catch (e) {
+          console.error('[CoverLetter] Failed to parse JSON response:', e);
+          setError('Failed to parse server response.');
+          setLoading(false);
+          return;
+        }
+      } else {
+        const text = await res.text();
+        console.error('[CoverLetter] Received non-JSON response:', text);
+        setError('Server returned an invalid response format.');
         setLoading(false);
         return;
       }
 
       if (!res.ok) {
         console.error('[CoverLetter] Server error:', data);
-        setError(data.detail || data.error || 'Failed to generate cover letter');
+        setError(data?.detail || data?.error || 'Failed to generate cover letter');
         setLoading(false);
         return;
+      }
+
+      // Save the cover letter to Supabase
+      try {
+        const { error: saveError } = await supabase
+          .from('cover_letters')
+          .insert({
+            user_id: user.id,
+            title: `Cover Letter for ${fields.company || 'Job'}`,
+            content: data.cover_letter,
+            job_title: fields.hiringTitle,
+            company: fields.company,
+            job_description: jobDescription,
+            source_type: 'text',
+            status: 'generated'
+          });
+
+        if (saveError) {
+          console.error('[CoverLetter] Error saving cover letter:', saveError);
+          // Don't show error to user since the cover letter was generated successfully
+        }
+      } catch (saveErr) {
+        console.error('[CoverLetter] Error saving cover letter:', saveErr);
+        // Don't show error to user since the cover letter was generated successfully
       }
 
       setCoverLetter(data.cover_letter);
