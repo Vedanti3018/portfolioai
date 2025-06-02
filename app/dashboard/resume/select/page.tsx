@@ -157,15 +157,14 @@ export default function SelectResumePage() {
       if (error) throw error;
 
       // Call the API to parse the resume
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('file_url', publicUrl);
+      formData.append('resume_id', resume.id);
+
       const response = await fetch('/api/onboarding/parse-cv', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          file_url: publicUrl,
-          resume_id: resume.id
-        }),
+        body: formData
       });
 
       if (!response.ok) {
