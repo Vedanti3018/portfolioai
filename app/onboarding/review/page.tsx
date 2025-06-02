@@ -318,6 +318,25 @@ export default function ReviewPage() {
     );
   }
 
+  if (!resumeData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#18181b] via-[#101014] to-[#23232a]">
+        <div className="text-white text-center">
+          <h2 className="text-xl font-semibold mb-2">No Resume Data Found</h2>
+          <p className="text-gray-400 mb-4">Please complete the onboarding process first.</p>
+          <Button
+            variant="outline"
+            className="flex items-center gap-2 bg-white/10 text-white border border-white/20 hover:bg-white/20 font-medium py-2 rounded-lg transition"
+            onClick={() => router.push('/onboarding')}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Onboarding
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   console.log('Rendering ReviewPage with resumeData:', resumeData);
 
   return (
