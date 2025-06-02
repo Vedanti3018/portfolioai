@@ -454,10 +454,12 @@ export default function PortfolioEditorPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          education: portfolioData.education,
-          experience: portfolioData.experience,
-          projects: portfolioData.projects,
-          certifications: portfolioData.certifications,
+          portfolio_data: {
+            education: portfolioData.education,
+            experience: portfolioData.experience,
+            projects: portfolioData.projects,
+            certifications: portfolioData.certifications,
+          }
         }),
       });
 
