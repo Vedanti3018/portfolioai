@@ -146,8 +146,35 @@ export default function SelectResumePage() {
     setShowExistingModal(true);
   };
 
-  const handleResumeSelect = (resume: Resume) => {
-    setSelectedResume(resume);
+  const handleResumeSelect = (item: Resume | Draft) => {
+    if ('title' in item) {
+      // It's a Resume
+      setSelectedResume(item as Resume);
+    } else {
+      // It's a Draft - create a new resume from the draft
+      const draftResume: Resume = {
+        id: item.id,
+        title: item.name || 'Untitled Resume',
+        content: item.content || {
+          personal: {
+            name: item.name || '',
+            title: '',
+            email: item.email || '',
+            phone: item.phone || '',
+            location: '',
+            summary: '',
+          },
+          experience: [],
+          education: [],
+          skills: [],
+        },
+        is_primary: false,
+        created_at: item.created_at || new Date().toISOString(),
+        updated_at: item.updated_at || new Date().toISOString(),
+        deleted_at: null
+      };
+      setSelectedResume(draftResume);
+    }
     setShowExistingModal(false);
     setShowTargetPrompt(true);
   };
@@ -219,7 +246,7 @@ export default function SelectResumePage() {
                   <Card
                     key={item.id}
                     className="flex items-center justify-between px-4 py-3 cursor-pointer border border-white/10 bg-[#23232a] text-white hover:border-blue-400"
-                    onClick={() => handleResumeSelect(item as Resume)}
+                    onClick={() => handleResumeSelect(item as Resume | Draft)}
                   >
                     <div className="flex items-center gap-3">
                       <FileText className="w-5 h-5 text-gray-400" />
