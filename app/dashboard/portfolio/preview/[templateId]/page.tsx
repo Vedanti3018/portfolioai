@@ -277,9 +277,9 @@ export default function PortfolioEditorPage() {
         .from('portfolios')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
-      if (fetchError) {
+      if (fetchError && fetchError.code !== 'PGRST116') {
         console.error('Error fetching portfolio data:', fetchError);
         throw new Error(typeof fetchError === 'string' ? fetchError : 'Failed to fetch portfolio data');
       }
