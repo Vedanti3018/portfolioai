@@ -83,7 +83,10 @@ export async function POST(request: Request) {
     const response = await fetch(`${apiUrl}/extract-pdf`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ file_path: publicUrl })
+      body: JSON.stringify({ 
+        file_path: publicUrl,
+        file_url: publicUrl 
+      })
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
