@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -47,9 +47,9 @@ export default function SelectResumePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [drafts, setDrafts] = useState<Draft[]>([]);
 
-  useEffect(() => {
-    const fetchResumesAndDrafts = async () => {
-      setLoading(true);
+  const fetchResumesAndDrafts = useCallback(async () => {
+    setLoading(true);
+    try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         router.push('/login');
@@ -88,16 +88,23 @@ export default function SelectResumePage() {
         : [];
       setResumes(filteredResumes);
       setDrafts(filteredDrafts);
+    } catch (error) {
+      console.error('Error fetching resumes and drafts:', error);
+      toast.error('Failed to load resumes and drafts');
+    } finally {
       setLoading(false);
-    };
-    fetchResumesAndDrafts();
+    }
   }, [supabase, router]);
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
+  useEffect(() => {
+    fetchResumesAndDrafts();
+  }, [fetchResumesAndDrafts]);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
@@ -197,13 +204,13 @@ export default function SelectResumePage() {
     } finally {
       setUploading(false);
     }
-  };
+  }, [supabase]);
 
-  const handleExistingClick = () => {
+  const handleExistingClick = useCallback(() => {
     setShowExistingModal(true);
-  };
+  }, []);
 
-  const handleResumeSelect = (item: Resume | Draft) => {
+  const handleResumeSelect = useCallback((item: Resume | Draft) => {
     if ('title' in item) {
       // It's a Resume
       setSelectedResume(item as Resume);
@@ -234,19 +241,24 @@ export default function SelectResumePage() {
     }
     setShowExistingModal(false);
     setShowTargetPrompt(true);
-  };
+  }, []);
 
-  const handleTargetSubmit = async () => {
+  const handleTargetSubmit = useCallback(async () => {
     if (!selectedResume) return;
-    await supabase
-      .from('resumes')
-      .update({
-        target_title: targetTitle,
-        target_description: targetDescription
-      })
-      .eq('id', selectedResume.id);
-    router.push(`/dashboard/resume/edit/${selectedResume.id}`);
-  };
+    try {
+      await supabase
+        .from('resumes')
+        .update({
+          target_title: targetTitle,
+          target_description: targetDescription
+        })
+        .eq('id', selectedResume.id);
+      router.push(`/dashboard/resume/edit/${selectedResume.id}`);
+    } catch (error) {
+      console.error('Error updating resume:', error);
+      toast.error('Failed to update resume');
+    }
+  }, [selectedResume, targetTitle, targetDescription, supabase, router]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#0f0f0f] text-white px-4">
