@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { FileText, Upload, ArrowLeft } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 interface Resume {
   id: string;
@@ -103,6 +104,26 @@ export default function SelectResumePage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not logged in');
+
+      // First upload the file to Supabase storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${session.user.id}/${Date.now()}.${fileExt}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('resumes')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('resumes')
+        .getPublicUrl(fileName);
+
+      // Create the resume record
       const { data: resume, error } = await supabase
         .from('resumes')
         .insert([
@@ -124,7 +145,7 @@ export default function SelectResumePage() {
             },
             is_primary: false,
             source_type: 'existing',
-            file_url: null,
+            file_url: publicUrl,
             original_filename: file.name,
             downloaded: false,
             deleted_at: null
@@ -132,11 +153,48 @@ export default function SelectResumePage() {
         ])
         .select()
         .single();
+
       if (error) throw error;
+
+      // Call the API to parse the resume
+      const response = await fetch('/api/onboarding/parse-cv', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          file_url: publicUrl,
+          resume_id: resume.id
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to parse resume');
+      }
+
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to parse resume');
+      }
+
+      // Update the resume with parsed data
+      const { error: updateError } = await supabase
+        .from('resumes')
+        .update({
+          content: data.structured,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', resume.id);
+
+      if (updateError) throw updateError;
+
       setSelectedResume(resume);
       setShowTargetPrompt(true);
+      toast.success('Resume uploaded and parsed successfully!');
     } catch (err) {
-      // Handle error
+      console.error('Error uploading resume:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to upload resume');
     } finally {
       setUploading(false);
     }
