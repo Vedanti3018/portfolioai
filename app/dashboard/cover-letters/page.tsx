@@ -94,8 +94,8 @@ export default function CoverLettersPage() {
 
       if (resumeFile) {
         const formData = new FormData();
+        formData.append('resumeFile', resumeFile);
         formData.append('jobDescription', jobDescription);
-        formData.append('userId', user.id);
         formData.append('fullName', fields.fullName);
         formData.append('email', fields.email);
         formData.append('address', fields.address);
@@ -105,79 +105,89 @@ export default function CoverLettersPage() {
         formData.append('hiringTitle', fields.hiringTitle);
         formData.append('company', fields.company);
         formData.append('companyAddress', fields.companyAddress);
-        formData.append('resumeFile', resumeFile);
+
         // Debug: print all FormData entries
         for (let [key, value] of formData.entries()) {
           console.log('[CoverLetter] FormData entry:', key, value);
         }
         console.log('[CoverLetter] Sending FormData with file:', resumeFile.name);
+
         const res = await fetch(`${apiUrl}/generate-cover-letter`, {
           method: 'POST',
           body: formData,
         });
+
         let data = null;
         try {
           data = await res.json();
         } catch (e) {
+          console.error('[CoverLetter] Failed to parse response:', e);
           setError('Failed to parse server response.');
           setLoading(false);
           return;
         }
+
         if (!res.ok) {
-          setError(data.error || 'Failed to generate cover letter');
+          console.error('[CoverLetter] Server error:', data);
+          setError(data.detail || data.error || 'Failed to generate cover letter');
           setLoading(false);
           return;
         }
-        setCoverLetter(data.coverLetter);
+
+        setCoverLetter(data.cover_letter);
         toast.success('Cover letter generated!');
         setLoading(false);
         return;
       }
-      let resumeTextToSend = resumeText;
-      if (!resumeTextToSend) {
-        setError('Please provide a resume (upload or select).');
+
+      // If no file is uploaded, use the text input
+      if (!resumeText) {
+        setError('Please provide a resume (upload or paste text).');
         setLoading(false);
         return;
       }
+
       if (!jobDescription) {
         setError('Please enter a job description.');
         setLoading(false);
         return;
       }
-      const payload = {
-        resumeText: resumeTextToSend,
-        jobDescription,
-        fullName: fields.fullName,
-        email: fields.email,
-        address: fields.address,
-        phone: fields.phone,
-        date: fields.date,
-        hiringManager: fields.hiringManager,
-        hiringTitle: fields.hiringTitle,
-        company: fields.company,
-        companyAddress: fields.companyAddress,
-      };
-      console.log('[CoverLetter] Sending payload:', payload);
-      console.log('[CoverLetter] About to fetch');
+
+      const formData = new FormData();
+      formData.append('jobDescription', jobDescription);
+      formData.append('fullName', fields.fullName);
+      formData.append('email', fields.email);
+      formData.append('address', fields.address);
+      formData.append('phone', fields.phone);
+      formData.append('date', fields.date);
+      formData.append('hiringManager', fields.hiringManager);
+      formData.append('hiringTitle', fields.hiringTitle);
+      formData.append('company', fields.company);
+      formData.append('companyAddress', fields.companyAddress);
+
       const res = await fetch(`${apiUrl}/generate-cover-letter`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: formData,
       });
+
       let data = null;
       try {
         data = await res.json();
       } catch (e) {
+        console.error('[CoverLetter] Failed to parse response:', e);
         setError('Failed to parse server response.');
         setLoading(false);
         return;
       }
+
       if (!res.ok) {
-        setError(data.error || 'Failed to generate cover letter');
+        console.error('[CoverLetter] Server error:', data);
+        setError(data.detail || data.error || 'Failed to generate cover letter');
         setLoading(false);
         return;
       }
-      setCoverLetter(data.coverLetter);
+
+      setCoverLetter(data.cover_letter);
       toast.success('Cover letter generated!');
     } catch (err) {
       console.error('[CoverLetter] Unexpected error:', err);
