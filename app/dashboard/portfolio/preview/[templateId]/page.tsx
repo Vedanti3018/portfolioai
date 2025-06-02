@@ -279,9 +279,9 @@ export default function PortfolioEditorPage() {
         .eq('user_id', userId)
         .single();
 
-      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means 'no rows found'
+      if (fetchError) {
         console.error('Error fetching portfolio data:', fetchError);
-        throw new Error(fetchError.message);
+        throw new Error(typeof fetchError === 'string' ? fetchError : 'Failed to fetch portfolio data');
       }
 
       if (portfolio) {
@@ -1326,7 +1326,7 @@ export default function PortfolioEditorPage() {
                   srcDoc={generatedHtml}
                   title="Portfolio Preview"
                   className="w-full h-full border-none"
-                  sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                  sandbox="allow-scripts"
                 ></iframe>
               )}
            </div>
