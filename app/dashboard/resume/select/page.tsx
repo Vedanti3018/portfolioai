@@ -64,10 +64,9 @@ export default function SelectResumePage() {
       // Fetch onboarding drafts
       const { data: draftsData, error: draftsError } = await supabase
         .from('onboarding_drafts')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false });
+        .select('parsed_data')
+        .eq('id', session.user.id)
+        .single();
       // Filter resumes
       const filteredResumes = (resumesData || []).filter(r =>
         (r.content && (
@@ -76,9 +75,16 @@ export default function SelectResumePage() {
         ))
       );
       // Filter drafts
-      const filteredDrafts = (draftsData || []).filter(d =>
-        (d.name && d.name.trim() !== '') || (d.content && d.content.personal && d.content.personal.name && d.content.personal.name.trim() !== '')
-      );
+      const filteredDrafts = draftsData && draftsData.parsed_data
+        ? [{
+            id: session.user.id,
+            user_id: session.user.id,
+            ...draftsData.parsed_data
+          }].filter(d =>
+            d.name?.trim() ||
+            (d.content?.personal?.name?.trim())
+          )
+        : [];
       setResumes(filteredResumes);
       setDrafts(filteredDrafts);
       setLoading(false);
