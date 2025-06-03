@@ -152,33 +152,45 @@ export default function EditResumePage({ params }: { params: { resumeId: string 
           return;
         }
 
-        console.log('Resume data fetched successfully:', {
+        console.log('Raw resume data from database:', {
           id: resumeData.id,
           title: resumeData.title,
-          hasContent: !!resumeData.content,
-          contentKeys: resumeData.content ? Object.keys(resumeData.content) : []
+          content: resumeData.content,
+          content_type: typeof resumeData.content,
+          is_json: resumeData.content ? typeof resumeData.content === 'object' : false
         });
 
         // Ensure the resume content has the required structure
+        let processedContent;
+        try {
+          // If content is a string, try to parse it as JSON
+          if (typeof resumeData.content === 'string') {
+            processedContent = JSON.parse(resumeData.content);
+          } else {
+            processedContent = resumeData.content;
+          }
+        } catch (parseError) {
+          console.error('Error parsing resume content:', parseError);
+          processedContent = defaultResumeContent;
+        }
+
         const processedResume = {
           ...resumeData,
           content: {
             ...defaultResumeContent,
-            ...resumeData.content,
+            ...processedContent,
             personal: {
               ...defaultResumeContent.personal,
-              ...(resumeData.content?.personal || {})
+              ...(processedContent?.personal || {})
             }
           }
         };
 
-        console.log('Processed resume structure:', {
-          hasPersonal: !!processedResume.content.personal,
-          personalKeys: Object.keys(processedResume.content.personal),
-          hasExperience: Array.isArray(processedResume.content.experience),
-          experienceLength: processedResume.content.experience.length,
-          hasEducation: Array.isArray(processedResume.content.education),
-          educationLength: processedResume.content.education.length
+        console.log('Processed resume content:', {
+          personal: processedResume.content.personal,
+          experience: processedResume.content.experience,
+          education: processedResume.content.education,
+          skills: processedResume.content.skills
         });
 
         setResume(processedResume);
