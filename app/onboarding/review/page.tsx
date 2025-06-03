@@ -343,7 +343,7 @@ export default function ReviewPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#18181b] via-[#101014] to-[#23232a] p-4">
       <div className="max-w-4xl mx-auto">
         <MotionCard
-          className="w-full border-none bg-[#18181b]/90 rounded-2xl shadow-2xl backdrop-blur-md"
+          className="w-full border-none bg-[#18181b]/90 rounded-2xl shadow-2xl backdrop-blur-md pt-28"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
