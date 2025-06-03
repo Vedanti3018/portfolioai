@@ -112,6 +112,7 @@ export async function POST(req: Request) {
     const huggingfaceApiUrl = process.env.HUGGINGFACE_API_URL || 'https://ved3018-portfolioai.hf.space';
     console.log('🌐 Calling HuggingFace API:', huggingfaceApiUrl);
     
+    let resumeData: any;
     try {
       const response = await fetch(`${huggingfaceApiUrl}/generate-resume`, {
         method: 'POST',
@@ -121,7 +122,9 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           prompt: extractedText,
           userInfo: userInfo,
-          userId: userId
+          userId: userId,
+          jobTitle: jobTitle,
+          jobDescription: jobDescription
         })
       });
 
@@ -129,7 +132,7 @@ export async function POST(req: Request) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const resumeData = await response.json();
+      resumeData = await response.json();
       console.log('✅ Successfully received resume data from HuggingFace');
     } catch (err) {
       console.error('❌ Error calling HuggingFace API:', err);
