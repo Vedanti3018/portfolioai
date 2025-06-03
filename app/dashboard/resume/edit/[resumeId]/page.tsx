@@ -118,33 +118,73 @@ export default function EditResumePage({ params }: { params: { resumeId: string 
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
+          console.log('No session found, redirecting to login');
           router.push('/login');
           return;
         }
 
+        console.log('Current session user:', session.user.id);
+        console.log('Attempting to fetch resume with ID:', params.resumeId);
+
+        // First check if the resume exists and belongs to the user
         const { data: resumeData, error } = await supabase
           .from('resumes')
           .select('*')
           .eq('id', params.resumeId)
+          .eq('user_id', session.user.id)
+          .is('deleted_at', null)
           .single();
 
-        if (error) throw error;
-        
+        if (error) {
+          console.error('Supabase error details:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          });
+          setError(`Error fetching resume: ${error.message}`);
+          return;
+        }
+
+        if (!resumeData) {
+          console.error('No resume found with ID:', params.resumeId);
+          setError('Resume not found or you do not have permission to access it');
+          return;
+        }
+
+        console.log('Resume data fetched successfully:', {
+          id: resumeData.id,
+          title: resumeData.title,
+          hasContent: !!resumeData.content,
+          contentKeys: resumeData.content ? Object.keys(resumeData.content) : []
+        });
+
         // Ensure the resume content has the required structure
-        setResume({
+        const processedResume = {
           ...resumeData,
           content: {
             ...defaultResumeContent,
             ...resumeData.content,
             personal: {
               ...defaultResumeContent.personal,
-              ...resumeData.content.personal
+              ...(resumeData.content?.personal || {})
             }
           }
+        };
+
+        console.log('Processed resume structure:', {
+          hasPersonal: !!processedResume.content.personal,
+          personalKeys: Object.keys(processedResume.content.personal),
+          hasExperience: Array.isArray(processedResume.content.experience),
+          experienceLength: processedResume.content.experience.length,
+          hasEducation: Array.isArray(processedResume.content.education),
+          educationLength: processedResume.content.education.length
         });
+
+        setResume(processedResume);
       } catch (error) {
-        console.error('Error fetching resume:', error);
-        setError('Failed to load resume');
+        console.error('Unexpected error fetching resume:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load resume');
       } finally {
         setLoading(false);
       }
