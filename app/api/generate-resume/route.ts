@@ -19,6 +19,7 @@ export async function POST(req: Request) {
     const { fileUrl, jobTitle, jobDescription, userId, prompt, userInfo } = await req.json();
     console.log('📥 API Input:', { fileUrl, jobTitle, jobDescription, userId, prompt, userInfo });
 
+    // Validate required fields
     if (!userId) {
       console.error('❌ Missing required field: userId');
       return NextResponse.json(
@@ -27,52 +28,48 @@ export async function POST(req: Request) {
       );
     }
 
-    // Determine the flow type and validate required fields
+    // Determine which flow we're in
     const isFileFlow = !!fileUrl;
     const isPromptFlow = !!prompt;
 
+    if (!isFileFlow && !isPromptFlow) {
+      return NextResponse.json(
+        { error: "Either fileUrl or prompt must be provided" },
+        { status: 400 }
+      );
+    }
+
+    // Validate required fields based on flow
     if (isFileFlow) {
-      // File-based enhancement flow
       if (!jobTitle || !jobDescription) {
-        console.error('❌ Missing required fields for file enhancement: jobTitle or jobDescription');
         return NextResponse.json(
-          { error: 'Missing required fields: jobTitle and jobDescription' },
-          { status: 400 }
-        );
-      }
-    } else if (isPromptFlow) {
-      // Prompt-based generation flow
-      if (!userInfo?.name || !userInfo?.email) {
-        console.error('❌ Missing required fields for prompt generation: userInfo.name or userInfo.email');
-        return NextResponse.json(
-          { error: 'Missing required fields: userInfo.name and userInfo.email' },
+          { error: "jobTitle and jobDescription are required for file-based generation" },
           { status: 400 }
         );
       }
     } else {
-      console.error('❌ Missing required field: either fileUrl or prompt');
-      return NextResponse.json(
-        { error: 'Missing required field: either fileUrl or prompt' },
-        { status: 400 }
-      );
+      if (!userInfo?.name || !userInfo?.email) {
+        return NextResponse.json(
+          { error: "userInfo.name and userInfo.email are required for prompt-based generation" },
+          { status: 400 }
+        );
+      }
     }
+
+    // Construct command based on flow
+    const command = isFileFlow
+      ? `python3 scripts/generate_resume_from_file.py --file "${fileUrl}" --job_title "${jobTitle}" --job_description "${jobDescription}"`
+      : `python3 scripts/generate_resume_from_file.py --prompt "${prompt}" --user_name "${userInfo.name}" --user_email "${userInfo.email}"`;
+
+    console.log('Executing command:', command);
 
     // Run the Python script with appropriate arguments
     const scriptPath = path.join(process.cwd(), 'scripts', 'generate_resume_from_file.py');
     console.log('🐍 Running Python script:', scriptPath);
     let stdout, stderr;
     try {
-      let args;
-      if (isFileFlow) {
-        // File flow: use file URL and job details
-        args = `--file "${fileUrl}" --job_title "${jobTitle}" --job_description "${jobDescription}"`;
-      } else {
-        // Prompt flow: use prompt and user info
-        args = `--prompt "${prompt}" --user_name "${userInfo.name}" --user_email "${userInfo.email}"`;
-      }
-      
-      console.log('Running command:', `python ${scriptPath} ${args}`);
-      ({ stdout, stderr } = await execAsync(`python ${scriptPath} ${args}`));
+      console.log('Running command:', command);
+      ({ stdout, stderr } = await execAsync(command));
       console.log('📝 Generation script output:', stdout);
       if (stderr) {
         console.warn('⚠️ Script warnings:', stderr);
@@ -107,14 +104,14 @@ export async function POST(req: Request) {
         .insert({
           user_id: userId,
           content: resumeData,
-          target_title: isFileFlow ? jobTitle : null,
-          target_description: isFileFlow ? jobDescription : null,
+          target_title: jobTitle,
+          target_description: jobDescription,
           source_type: isFileFlow ? 'file' : 'prompt',
           file_url: fileUrl || null,
           original_filename: fileUrl ? path.basename(fileUrl) : null,
           title: isFileFlow
             ? `Resume for ${userId}${jobTitle ? ' - ' + jobTitle : ''}`
-            : `Resume for ${userInfo.name}${prompt ? ' - ' + prompt.split(' ').slice(0, 5).join(' ') : ''}`
+            : `Resume for ${userInfo.name}${jobTitle ? ' - ' + jobTitle : ''}`
         })
         .select()
         .single());

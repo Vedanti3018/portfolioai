@@ -47,6 +47,7 @@ export default function AiPromptPage() {
   const handleSubmit = async () => {
     if (!prompt || !userInfo) return;
     setLoading(true);
+    setError(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -67,17 +68,17 @@ export default function AiPromptPage() {
           prompt,
           userId: session.user.id,
           userInfo: {
-            name: userInfo.name,
-            email: userInfo.email
+            name: userInfo.name || '',
+            email: userInfo.email || ''
           },
-          jobTitle: prompt.split(' ').slice(0, 5).join(' '), // Use first 5 words as job title
-          jobDescription: prompt // Use full prompt as job description
+          source_type: 'prompt'
         }),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to generate resume');
+        const errorData = await response.json();
+        console.error('Resume generation failed:', errorData);
+        throw new Error(errorData.error || 'Failed to generate resume');
       }
 
       const { resumeId } = await response.json();
