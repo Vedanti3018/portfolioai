@@ -870,7 +870,7 @@ export default function PortfolioEditorPage() {
        <aside 
          className={cn(
            "transition-all duration-300 lg:w-1/3 w-full p-6 bg-black border-r border-white/10 overflow-y-auto pt-24",
-           editorOpen ? "max-w-lg" : "max-w-[60px] min-w-[60px] p-2"
+           editorOpen ? "max-w-lg" : "max-w-[60px] min-w-[60px] p-2 pt-24"
          )}
        >
          <div
