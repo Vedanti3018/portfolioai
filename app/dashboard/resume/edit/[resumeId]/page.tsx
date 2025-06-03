@@ -169,6 +169,24 @@ export default function EditResumePage({ params }: { params: { resumeId: string 
           } else {
             processedContent = resumeData.content;
           }
+
+          // Ensure all required fields exist with default values
+          processedContent = {
+            personal: {
+              name: processedContent?.personal?.name || '',
+              title: processedContent?.personal?.title || '',
+              email: processedContent?.personal?.email || '',
+              phone: processedContent?.personal?.phone || '',
+              location: processedContent?.personal?.location || '',
+              summary: processedContent?.personal?.summary || ''
+            },
+            experience: Array.isArray(processedContent?.experience) ? processedContent.experience : [],
+            education: Array.isArray(processedContent?.education) ? processedContent.education : [],
+            skills: Array.isArray(processedContent?.skills) ? processedContent.skills : [],
+            projects: Array.isArray(processedContent?.projects) ? processedContent.projects : [],
+            certifications: Array.isArray(processedContent?.certifications) ? processedContent.certifications : [],
+            awards: Array.isArray(processedContent?.awards) ? processedContent.awards : []
+          };
         } catch (parseError) {
           console.error('Error parsing resume content:', parseError);
           processedContent = defaultResumeContent;
@@ -176,14 +194,7 @@ export default function EditResumePage({ params }: { params: { resumeId: string 
 
         const processedResume = {
           ...resumeData,
-          content: {
-            ...defaultResumeContent,
-            ...processedContent,
-            personal: {
-              ...defaultResumeContent.personal,
-              ...(processedContent?.personal || {})
-            }
-          }
+          content: processedContent
         };
 
         console.log('Processed resume content:', {
