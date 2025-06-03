@@ -79,6 +79,25 @@ export default function EditResumePage({ params }: { params: { resumeId: string 
   const [resume, setResume] = useState<Resume | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Initialize default resume content structure
+  const defaultResumeContent: ResumeData = {
+    personal: {
+      name: '',
+      title: '',
+      email: '',
+      phone: '',
+      location: '',
+      summary: ''
+    },
+    experience: [],
+    education: [],
+    skills: [],
+    projects: [],
+    certifications: [],
+    awards: []
+  };
+
   // Accordion state for each section
   const [openSections, setOpenSections] = useState({
     personal: false,
@@ -103,16 +122,29 @@ export default function EditResumePage({ params }: { params: { resumeId: string 
           return;
         }
 
-        const { data: resume, error } = await supabase
+        const { data: resumeData, error } = await supabase
           .from('resumes')
           .select('*')
           .eq('id', params.resumeId)
           .single();
 
         if (error) throw error;
-        setResume(resume);
+        
+        // Ensure the resume content has the required structure
+        setResume({
+          ...resumeData,
+          content: {
+            ...defaultResumeContent,
+            ...resumeData.content,
+            personal: {
+              ...defaultResumeContent.personal,
+              ...resumeData.content.personal
+            }
+          }
+        });
       } catch (error) {
         console.error('Error fetching resume:', error);
+        setError('Failed to load resume');
       } finally {
         setLoading(false);
       }
