@@ -108,36 +108,47 @@ export async function POST(req: Request) {
       console.log('📝 Using prompt as input text');
     }
 
-    // Instead of running Python script, call HuggingFace API
-    const huggingfaceApiUrl = process.env.HUGGINGFACE_API_URL || 'https://ved3018-portfolioai.hf.space';
-    console.log('🌐 Calling HuggingFace API:', huggingfaceApiUrl);
-    
-    let resumeData: any;
+    // Run the Python script with appropriate arguments
+    const scriptPath = path.join(process.cwd(), 'scripts', 'generate_resume_from_file.py');
+    console.log('🐍 Running Python script:', scriptPath);
+    let stdout, stderr;
     try {
-      const response = await fetch(`${huggingfaceApiUrl}/generate-resume`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: extractedText,
-          userInfo: userInfo,
-          userId: userId,
-          jobTitle: jobTitle,
-          jobDescription: jobDescription
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      const args = fileUrl 
+        ? `--prompt "${extractedText}" --job_title "${jobTitle}" --job_description "${jobDescription}"`
+        : `--prompt "${extractedText}" --user_name "${userInfo.name}" --user_email "${userInfo.email}"`;
+      
+      ({ stdout, stderr } = await execAsync(`python ${scriptPath} ${args}`));
+      console.log('📝 Generation script output:', stdout);
+      if (stderr) {
+        console.warn('⚠️ Script warnings:', stderr);
       }
-
-      resumeData = await response.json();
-      console.log('✅ Successfully received resume data from HuggingFace');
     } catch (err) {
-      console.error('❌ Error calling HuggingFace API:', err);
+      console.error('❌ Error running generation script:', err);
       return NextResponse.json(
-        { error: 'Error calling HuggingFace API', details: String(err) },
+        { error: 'Error running generation script', details: String(err) },
+        { status: 500 }
+      );
+    }
+
+    // Clean up the temporary file if it exists
+    if (filePath) {
+      try {
+        fs.unlinkSync(filePath);
+        console.log('🧹 Cleaned up temp file:', filePath);
+      } catch (err) {
+        console.error('⚠️ Error cleaning up temp file:', err);
+      }
+    }
+
+    // Parse the JSON output from the script
+    let resumeData;
+    try {
+      resumeData = JSON.parse(stdout);
+      console.log('✅ Successfully parsed resumeData:', resumeData);
+    } catch (err) {
+      console.error('❌ Error parsing generation output:', err, 'Raw output:', stdout);
+      return NextResponse.json(
+        { error: 'Error parsing generation output', details: String(err), raw: stdout },
         { status: 500 }
       );
     }
