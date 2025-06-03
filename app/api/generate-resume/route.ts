@@ -27,8 +27,11 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate based on generation type
-    if (fileUrl) {
+    // Determine the flow type and validate required fields
+    const isFileFlow = !!fileUrl;
+    const isPromptFlow = !!prompt;
+
+    if (isFileFlow) {
       // File-based enhancement flow
       if (!jobTitle || !jobDescription) {
         console.error('❌ Missing required fields for file enhancement: jobTitle or jobDescription');
@@ -37,7 +40,7 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
-    } else if (prompt) {
+    } else if (isPromptFlow) {
       // Prompt-based generation flow
       if (!userInfo?.name || !userInfo?.email) {
         console.error('❌ Missing required fields for prompt generation: userInfo.name or userInfo.email');
@@ -54,69 +57,21 @@ export async function POST(req: Request) {
       );
     }
 
-    let extractedText: string;
-    let cleanup = false;
-    let filePath: string | null = null;
-
-    if (fileUrl) {
-      // Create a temporary file path
-      const tempDir = path.join(process.cwd(), 'tmp');
-      if (!fs.existsSync(tempDir)) {
-        fs.mkdirSync(tempDir);
-      }
-      filePath = path.join(tempDir, `${Date.now()}-${path.basename(fileUrl)}`);
-      console.log('📁 Created temp file path:', filePath);
-
-      // Download the file
-      try {
-        console.log('⬇️ Downloading file from:', fileUrl);
-        const response = await fetch(fileUrl);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const buffer = await response.arrayBuffer();
-        fs.writeFileSync(filePath, Buffer.from(buffer));
-        console.log('✅ File downloaded successfully to:', filePath);
-      } catch (err) {
-        console.error('❌ Error downloading file:', err);
-        return NextResponse.json(
-          { error: 'Error downloading file', details: String(err) },
-          { status: 500 }
-        );
-      }
-
-      // Extract text from file
-      try {
-        const scriptPath = path.join(process.cwd(), 'scripts', 'extract_text.py');
-        console.log('🐍 Running text extraction script:', scriptPath);
-        const { stdout, stderr } = await execAsync(`python ${scriptPath} --file "${filePath}"`);
-        if (stderr) {
-          console.warn('⚠️ Script warnings:', stderr);
-        }
-        extractedText = stdout.trim();
-        console.log('✅ Text extraction completed successfully');
-      } catch (err) {
-        console.error('❌ Error extracting text:', err);
-        return NextResponse.json(
-          { error: 'Error extracting text', details: String(err) },
-          { status: 500 }
-        );
-      }
-    } else {
-      // Use prompt as the input text
-      extractedText = prompt;
-      console.log('📝 Using prompt as input text');
-    }
-
     // Run the Python script with appropriate arguments
     const scriptPath = path.join(process.cwd(), 'scripts', 'generate_resume_from_file.py');
     console.log('🐍 Running Python script:', scriptPath);
     let stdout, stderr;
     try {
-      const args = fileUrl 
-        ? `--prompt "${extractedText}" --job_title "${jobTitle}" --job_description "${jobDescription}"`
-        : `--prompt "${extractedText}" --user_name "${userInfo.name}" --user_email "${userInfo.email}"`;
+      let args;
+      if (isFileFlow) {
+        // File flow: use file URL and job details
+        args = `--file "${fileUrl}" --job_title "${jobTitle}" --job_description "${jobDescription}"`;
+      } else {
+        // Prompt flow: use prompt and user info
+        args = `--prompt "${prompt}" --user_name "${userInfo.name}" --user_email "${userInfo.email}"`;
+      }
       
+      console.log('Running command:', `python ${scriptPath} ${args}`);
       ({ stdout, stderr } = await execAsync(`python ${scriptPath} ${args}`));
       console.log('📝 Generation script output:', stdout);
       if (stderr) {
@@ -128,16 +83,6 @@ export async function POST(req: Request) {
         { error: 'Error running generation script', details: String(err) },
         { status: 500 }
       );
-    }
-
-    // Clean up the temporary file if it exists
-    if (filePath) {
-      try {
-        fs.unlinkSync(filePath);
-        console.log('🧹 Cleaned up temp file:', filePath);
-      } catch (err) {
-        console.error('⚠️ Error cleaning up temp file:', err);
-      }
     }
 
     // Parse the JSON output from the script
@@ -162,16 +107,14 @@ export async function POST(req: Request) {
         .insert({
           user_id: userId,
           content: resumeData,
-          target_title: jobTitle || null,
-          target_description: jobDescription || null,
-          source_type: fileUrl ? 'file' : 'prompt',
+          target_title: isFileFlow ? jobTitle : null,
+          target_description: isFileFlow ? jobDescription : null,
+          source_type: isFileFlow ? 'file' : 'prompt',
           file_url: fileUrl || null,
           original_filename: fileUrl ? path.basename(fileUrl) : null,
-          title: fileUrl
+          title: isFileFlow
             ? `Resume for ${userId}${jobTitle ? ' - ' + jobTitle : ''}`
-            : userInfo?.name
-              ? `Resume for ${userInfo.name}${prompt ? ' - ' + prompt : ''}`
-              : 'AI Generated Resume'
+            : `Resume for ${userInfo.name}${prompt ? ' - ' + prompt.split(' ').slice(0, 5).join(' ') : ''}`
         })
         .select()
         .single());

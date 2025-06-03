@@ -15,6 +15,7 @@ export default function AiPromptPage() {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [userInfo, setUserInfo] = useState<{ name: string; email: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -53,21 +54,38 @@ export default function AiPromptPage() {
         return;
       }
 
+      console.log('Submitting resume generation request:', {
+        prompt,
+        userId: session.user.id,
+        userInfo
+      });
+
       const response = await fetch(`${apiUrl}/generate-resume`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           prompt,
           userId: session.user.id,
-          userInfo
+          userInfo: {
+            name: userInfo.name,
+            email: userInfo.email
+          },
+          jobTitle: prompt.split(' ').slice(0, 5).join(' '), // Use first 5 words as job title
+          jobDescription: prompt // Use full prompt as job description
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to generate resume');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to generate resume');
+      }
+
       const { resumeId } = await response.json();
+      console.log('Resume generated successfully with ID:', resumeId);
       router.push(`/dashboard/resume/edit/${resumeId}`);
     } catch (err) {
       console.error('Error generating resume:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate resume');
     } finally {
       setLoading(false);
     }
