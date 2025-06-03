@@ -538,13 +538,14 @@ export default function EditResumePage({ params }: { params: { resumeId: string 
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
           </svg>
-          <div className="text-lg font-semibold">Extracting your resume...</div>
+          <div className="text-lg font-semibold">Loading your resume...</div>
         </div>
       </div>
     );
   }
 
   if (!resume) {
+    console.log('Resume is null, showing error state');
     return (
       <div className="min-h-screen bg-black text-white p-8">
         <div className="max-w-7xl mx-auto">
@@ -556,6 +557,14 @@ export default function EditResumePage({ params }: { params: { resumeId: string 
       </div>
     );
   }
+
+  console.log('Rendering resume with data:', {
+    title: resume.title,
+    hasContent: !!resume.content,
+    personal: resume.content?.personal,
+    experience: resume.content?.experience,
+    education: resume.content?.education
+  });
 
   return (
     <div className="min-h-screen bg-black text-white p-4">
@@ -579,30 +588,54 @@ export default function EditResumePage({ params }: { params: { resumeId: string 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-gray-200">Name</Label>
-                      <Input value={resume.content.personal.name} onChange={(e) => handlePersonalChange('name', e.target.value)} className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500" />
+                      <Input 
+                        value={resume.content.personal?.name || ''} 
+                        onChange={(e) => handlePersonalChange('name', e.target.value)} 
+                        className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500" 
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-gray-200">Title</Label>
-                      <Input value={resume.content.personal.title} onChange={(e) => handlePersonalChange('title', e.target.value)} className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500" />
+                      <Input 
+                        value={resume.content.personal?.title || ''} 
+                        onChange={(e) => handlePersonalChange('title', e.target.value)} 
+                        className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500" 
+                      />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-gray-200">Email</Label>
-                      <Input value={resume.content.personal.email} onChange={(e) => handlePersonalChange('email', e.target.value)} className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500" />
+                      <Input 
+                        value={resume.content.personal?.email || ''} 
+                        onChange={(e) => handlePersonalChange('email', e.target.value)} 
+                        className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500" 
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-gray-200">Phone</Label>
-                      <Input value={resume.content.personal.phone} onChange={(e) => handlePersonalChange('phone', e.target.value)} className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500" />
+                      <Input 
+                        value={resume.content.personal?.phone || ''} 
+                        onChange={(e) => handlePersonalChange('phone', e.target.value)} 
+                        className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500" 
+                      />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-gray-200">Location</Label>
-                    <Input value={resume.content.personal.location} onChange={(e) => handlePersonalChange('location', e.target.value)} className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500" />
+                    <Input 
+                      value={resume.content.personal?.location || ''} 
+                      onChange={(e) => handlePersonalChange('location', e.target.value)} 
+                      className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-gray-200">Summary</Label>
-                    <Textarea value={resume.content.personal.summary} onChange={(e) => handlePersonalChange('summary', e.target.value)} className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 min-h-[100px]" />
+                    <Textarea 
+                      value={resume.content.personal?.summary || ''} 
+                      onChange={(e) => handlePersonalChange('summary', e.target.value)} 
+                      className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 min-h-[100px]" 
+                    />
                   </div>
                 </CardContent>
               )}
