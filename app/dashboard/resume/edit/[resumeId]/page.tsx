@@ -71,8 +71,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function EditResumePage({ params }: { params: Promise<{ resumeId: string }> }) {
-  const resolvedParams = use(params);
+export default function EditResumePage({ params }: { params: { resumeId: string } }) {
   const router = useRouter();
   const supabase = createClientComponentClient();
   const [loading, setLoading] = useState(true);
@@ -107,7 +106,7 @@ export default function EditResumePage({ params }: { params: Promise<{ resumeId:
         const { data: resume, error } = await supabase
           .from('resumes')
           .select('*')
-          .eq('id', resolvedParams.resumeId)
+          .eq('id', params.resumeId)
           .single();
 
         if (error) throw error;
@@ -120,7 +119,7 @@ export default function EditResumePage({ params }: { params: Promise<{ resumeId:
     };
 
     fetchResume();
-  }, [resolvedParams.resumeId, router, supabase]);
+  }, [params.resumeId, router, supabase]);
 
   const handlePersonalChange = (field: keyof ResumeData['personal'], value: string) => {
     if (!resume) return;
