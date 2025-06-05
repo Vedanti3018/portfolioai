@@ -28,6 +28,25 @@ export async function POST(req: Request) {
       );
     }
 
+    // Fetch user name and email from profiles table
+    let userName = '', userEmail = '';
+    try {
+      const { data: profile, error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .select('name, email')
+        .eq('id', userId)
+        .single();
+      if (profileError) {
+        console.error('❌ Error fetching user profile:', profileError);
+      } else {
+        userName = profile?.name || '';
+        userEmail = profile?.email || '';
+      }
+    } catch (err) {
+      console.error('❌ Exception fetching user profile:', err);
+    }
+
+
     // Determine which flow we're in
     const isFileFlow = !!fileUrl;
     const isPromptFlow = !!prompt;
