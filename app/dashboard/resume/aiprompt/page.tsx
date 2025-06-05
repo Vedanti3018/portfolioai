@@ -61,7 +61,7 @@ export default function AiPromptPage() {
         userInfo
       });
 
-      const response = await fetch(`${apiUrl}/generate-resume-from-prompt`, {
+      const response = await fetch(`${apiUrl}/generate-resume`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
