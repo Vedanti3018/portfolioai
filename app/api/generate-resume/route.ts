@@ -132,9 +132,10 @@ export async function POST(req: Request) {
             ? `Resume for ${userId}${jobTitle ? ' - ' + jobTitle : ''}`
             : `Resume for ${userInfo.name}${jobTitle ? ' - ' + jobTitle : ''}`
         })
-        .select()
+        .select('*')
         .single());
       
+        console.log('Resume insert result:', { resume, dbError });
       if (dbError) {
         console.error('❌ Database error:', dbError);
         return NextResponse.json(
