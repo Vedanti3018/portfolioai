@@ -274,32 +274,42 @@ export default function SelectResumePage() {
         </Button>
         <h1 className="text-3xl font-bold">Select Resume</h1>
       </div>
-      <div className="flex flex-col md:flex-row gap-8 w-full max-w-3xl justify-center items-center">
-        <Card
-          className="bg-[#18181b] border border-white/10 text-white cursor-pointer hover:shadow-2xl hover:border-blue-500 transition-all p-8 flex flex-col items-center justify-center min-h-[180px] w-full md:w-1/2"
-          onClick={handleUploadClick}
-        >
-          <Upload className="w-8 h-8 text-blue-400 mb-4" />
-          <CardTitle className="text-lg font-semibold mb-2 text-center">Upload Resume</CardTitle>
-          <CardDescription className="text-gray-400 text-base text-center">Upload a new resume (PDF/DOCX)</CardDescription>
-          <input
-            type="file"
-            accept=".pdf,.doc,.docx"
-            className="hidden"
-            ref={fileInputRef}
-            onChange={handleUpload}
-            disabled={uploading}
-          />
-        </Card>
-        <Card
-          className="bg-[#18181b] border border-white/10 text-white cursor-pointer hover:shadow-2xl hover:border-green-500 transition-all p-8 flex flex-col items-center justify-center min-h-[180px] w-full md:w-1/2"
-          onClick={handleExistingClick}
-        >
-          <FileText className="w-8 h-8 text-green-400 mb-4" />
-          <CardTitle className="text-lg font-semibold mb-2 text-center">Select Existing Resume</CardTitle>
-          <CardDescription className="text-gray-400 text-base text-center">Choose from your previously saved resumes</CardDescription>
-        </Card>
-      </div>
+      {loading ? (
+        <div className="flex flex-col items-center gap-4">
+          <svg className="animate-spin h-10 w-10 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+          </svg>
+          <div className="text-lg font-semibold">Loading...</div>
+        </div>
+      ) : (
+        <div className="flex flex-col md:flex-row gap-8 w-full max-w-3xl justify-center items-center">
+          <Card
+            className="bg-[#18181b] border border-white/10 text-white cursor-pointer hover:shadow-2xl hover:border-blue-500 transition-all p-8 flex flex-col items-center justify-center min-h-[180px] w-full md:w-1/2"
+            onClick={handleUploadClick}
+          >
+            <Upload className="w-8 h-8 text-blue-400 mb-4" />
+            <CardTitle className="text-lg font-semibold mb-2 text-center">Upload Resume</CardTitle>
+            <CardDescription className="text-gray-400 text-base text-center">Upload a new resume (PDF/DOCX)</CardDescription>
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={handleUpload}
+              disabled={uploading}
+            />
+          </Card>
+          <Card
+            className="bg-[#18181b] border border-white/10 text-white cursor-pointer hover:shadow-2xl hover:border-green-500 transition-all p-8 flex flex-col items-center justify-center min-h-[180px] w-full md:w-1/2"
+            onClick={handleExistingClick}
+          >
+            <FileText className="w-8 h-8 text-green-400 mb-4" />
+            <CardTitle className="text-lg font-semibold mb-2 text-center">Select Existing Resume</CardTitle>
+            <CardDescription className="text-gray-400 text-base text-center">Choose from your previously saved resumes</CardDescription>
+          </Card>
+        </div>
+      )}
       {/* Existing Resume Modal */}
       {showExistingModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
