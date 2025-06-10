@@ -263,15 +263,7 @@ export default function SelectResumePage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#0f0f0f] text-white px-4">
       <div className="flex items-center gap-4 mb-8">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push('/dashboard/resume')}
-          className="flex items-center gap-2 text-gray-400 hover:text-white"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Back
-        </Button>
+        
         <h1 className="text-3xl font-bold">Select Resume</h1>
       </div>
       {loading ? (
