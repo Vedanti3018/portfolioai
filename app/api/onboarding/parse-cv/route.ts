@@ -91,23 +91,24 @@ export async function POST(request: Request) {
         file_url: publicUrl 
       })
     });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Hugging Face API error:', errorData);
+
+    const responseData = await response.json();
+    console.log('Hugging Face API response:', responseData);
+
+    if (!response.ok || !responseData.success) {
+      console.error('Hugging Face API error:', responseData.error);
       return NextResponse.json(
-        { error: errorData.error || 'Failed to process resume with Hugging Face API' },
+        { error: responseData.error || 'Failed to process resume with Hugging Face API' },
         { status: 500 }
       );
     }
-    const extractedInfo = await response.json();
-    console.log('Resume parsed successfully by Hugging Face API');
 
     // 💾 Update onboarding_drafts with extracted info
     console.log('Updating onboarding draft with parsed data...');
     const { error: updateError } = await supabase
       .from('onboarding_drafts')
       .update({
-        parsed_data: extractedInfo,
+        parsed_data: responseData.structured,
         updated_at: new Date().toISOString()
       })
       .eq('id', session.user.id);
@@ -122,7 +123,10 @@ export async function POST(request: Request) {
     console.log('Onboarding draft updated with parsed data successfully');
 
     console.log('Sending success response to client...');
-    return NextResponse.json({ success: true, structured: extractedInfo });
+    return NextResponse.json({ 
+      success: true, 
+      structured: responseData.structured 
+    });
 
   } catch (error) {
     console.error('❌ Error in parse-cv API route:', error);
