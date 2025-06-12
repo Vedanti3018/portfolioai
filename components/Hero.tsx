@@ -26,6 +26,7 @@ const features = [
     description:
       'Paste your LinkedIn, upload a résumé, or answer guided questions. OlioAI builds you a mobile-friendly, professional portfolio — instantly. Export as HTML or host on a custom subdomain.',
     image: '/images/poortf.jpg',
+    imageFirst: true,
   },
   {
     icon: '🎙',
@@ -33,6 +34,7 @@ const features = [
     description:
       "Get grilled like it's game day. Role-specific questions, transcript feedback, confidence scoring, and improvement tips — all powered by AI.",
     image: '/images/cover.jpg',
+    imageFirst: false,
   },
   {
     icon: '📄',
@@ -40,6 +42,7 @@ const features = [
     description:
       'No résumé? No problem. We will extract your experience, skills, and metrics via dynamic prompts. One-click generation for tailored, job-specific cover letters with adjustable tone.',
     image: '/images/resume.jpg',
+    imageFirst: true,
   },
   {
     icon: '🧠',
@@ -47,8 +50,52 @@ const features = [
     description:
       'Identify areas for improvement and receive personalized recommendations to enhance your profile.',
     image: '/images/skill-gap-sample.jpg',
+    imageFirst: false,
   },
 ];
+
+const whyChooseUs = [
+  {
+    icon: '🚀',
+    title: 'Start Fast',
+    description: 'No templates. Just results. Enter your info and let AI do the rest.',
+  },
+  {
+    icon: '🧩',
+    title: 'All-in-One Platform',
+    description: 'No more juggling sites. Résumé, portfolio, interview prep—it\'s all here.',
+  },
+  {
+    icon: '🤖',
+    title: 'Smarter Than Templates',
+    description: 'Your materials are tailored with job-matching precision using AI.',
+  },
+  {
+    icon: '📈',
+    title: 'Built to Scale Your Search',
+    description: 'Apply smarter and faster with AI-backed optimization.',
+  },
+];
+
+const howItWorks = [
+  {
+    title: 'Step 1: Import',
+    description: 'Upload your résumé, paste your LinkedIn, or answer a few guided questions.',
+    color: 'text-red-400',
+  },
+  {
+    title: 'Step 2: Generate',
+    description: 'Let AI build your portfolio site, résumé, and cover letters—all in minutes.',
+    color: 'text-red-400',
+  },
+  {
+    title: 'Step 3: Optimize & Apply',
+    description: 'Get real-time feedback, tailor your applications, and track job alerts.',
+    color: 'text-red-400',
+  },
+];
+
+
 
 const testimonials = [
   {
@@ -177,7 +224,7 @@ export default function Home() {
         </motion.div>
       </motion.section>
 
-      {/* Image Gallery Section (Spacious, Scroll-Triggered) */}
+      {/* Features Section with Alternating Layout */}
       <section className="w-full max-w-7xl mx-auto px-4 py-32">
         <motion.h2
           className="text-3xl md:text-4xl font-bold text-center mb-16"
@@ -185,35 +232,69 @@ export default function Home() {
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          Explore OlioAI's Power
+          Everything You Need in One Place
         </motion.h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div className="space-y-32">
           {features.map((feature, idx) => (
             <motion.div
               key={idx}
-              className="relative w-full h-96 rounded-2xl overflow-hidden shadow-xl"
+              className={`flex flex-col ${feature.imageFirst ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-12`}
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: idx * 0.1 }}
+              transition={{ duration: 0.7, delay: idx * 0.2 }}
               viewport={{ once: true }}
             >
-              <Image
-                src={feature.image}
-                alt={feature.title}
-                layout="fill"
-                objectFit="cover"
-                className="opacity-90 hover:opacity-100 transition-opacity duration-300"
-              />
-              <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-                <h3 className="text-xl font-semibold">{feature.title}</h3>
-                <p className="text-gray-300 text-sm mt-1">{feature.description.substring(0, 120)}...</p>
-              </div>
+              {/* Image Section */}
+              <motion.div
+                className="w-full md:w-1/2"
+                initial={{ scale: 0.9, opacity: 0 }}
+                whileInView={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5, delay: idx * 0.2 + 0.2 }}
+                viewport={{ once: true }}
+              >
+                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
+                  <Image
+                    src={feature.image}
+                    alt={feature.title}
+                    fill
+                    className="object-cover hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                </div>
+              </motion.div>
+
+              {/* Content Section */}
+              <motion.div
+                className="w-full md:w-1/2 space-y-6"
+                initial={{ x: feature.imageFirst ? 50 : -50, opacity: 0 }}
+                whileInView={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.5, delay: idx * 0.2 + 0.3 }}
+                viewport={{ once: true }}
+              >
+                <div className="text-4xl mb-4">{feature.icon}</div>
+                <h3 className="text-3xl font-bold mb-4">{feature.title}</h3>
+                <p className="text-xl text-gray-300 leading-relaxed">{feature.description}</p>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: idx * 0.2 + 0.4 }}
+                  viewport={{ once: true }}
+                >
+                  <Button
+                    variant="outline"
+                    className="mt-6 border-white/20 hover:border-white/40 text-black"
+                    asChild
+                  >
+                    <Link href="/signup">Learn More →</Link>
+                  </Button>
+                </motion.div>
+              </motion.div>
             </motion.div>
           ))}
         </div>
       </section>
-
-      {/* Why Choose OlioAI? */}
+ 
+      {/* Why Choose Us Section */}
       <section className="w-full max-w-7xl mx-auto px-4 py-32">
         <motion.h2
           className="text-3xl md:text-4xl font-bold text-center mb-16"
@@ -221,21 +302,21 @@ export default function Home() {
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          Why Choose OlioAI?
+          Why OlioAI?
         </motion.h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          {features.map((feature, idx) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {whyChooseUs.map((item, idx) => (
             <motion.div
               key={idx}
-              className="bg-gray-900/50 border border-gray-800 rounded-xl p-8 flex flex-col items-center text-center shadow-lg hover:shadow-xl transition-all duration-300"
+              className="bg-gray-900/50 border border-gray-800 rounded-xl p-6 flex flex-col items-center text-center"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: idx * 0.1 }}
               viewport={{ once: true }}
             >
-              <div className="text-4xl mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-gray-300">{feature.description}</p>
+              <div className="text-4xl mb-4">{item.icon}</div>
+              <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+              <p className="text-gray-300">{item.description}</p>
             </motion.div>
           ))}
         </div>
@@ -347,6 +428,40 @@ export default function Home() {
             </motion.div>
           ))}
         </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="w-full max-w-7xl mx-auto px-4 py-32 text-center">
+        <motion.h2
+          className="text-3xl md:text-4xl font-bold mb-6"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          Start Your Job Search the Smart Way
+        </motion.h2>
+        <motion.p
+          className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          Let AI turn your background into your biggest advantage.
+          Try OlioAI free—no credit card required.
+        </motion.p>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Button
+            size="lg"
+            className="bg-white text-black hover:bg-gray-200 px-8 py-6 text-lg font-semibold rounded-lg"
+            asChild
+          >
+            <Link href="/signup">Create My Portfolio Now</Link>
+          </Button>
+        </motion.div>
       </section>
 
       {/* Footer Section */}
