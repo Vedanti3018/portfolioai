@@ -81,13 +81,39 @@ export default function ReviewPage() {
 
         console.log('Fetched onboarding_drafts data:', data);
         if (error) throw error;
-        if (!data) {
+        if (!data || !data.parsed_data) {
+          console.error('No parsed data found in onboarding_drafts');
           router.push('/onboarding');
           return;
         }
 
-        console.log('Set resumeData:', data.parsed_data.structured);
-        setResumeData(data.parsed_data.structured);
+        // Transform the data into the expected structure
+        const transformedData = {
+          basic_info: {
+            name: data.parsed_data.personal?.name || null,
+            email: data.parsed_data.personal?.email || null,
+            phone: data.parsed_data.personal?.phone || null,
+            country: data.parsed_data.personal?.location || null,
+            education: data.parsed_data.education || []
+          },
+          professional_info: {
+            current_designation: data.parsed_data.personal?.title || null,
+            skills: {
+              technical_skills: data.parsed_data.skills || [],
+              soft_skills: [],
+              languages: []
+            },
+            experience: data.parsed_data.experience || [],
+            certifications: data.parsed_data.certifications || [],
+            projects: data.parsed_data.projects || [],
+            linkedin_url: null,
+            portfolio_url: null,
+            resume_url: null
+          }
+        };
+
+        console.log('Transformed resumeData:', transformedData);
+        setResumeData(transformedData);
       } catch (error) {
         console.error('Error fetching draft data:', error);
         toast.error('Failed to load resume data');
@@ -340,10 +366,10 @@ export default function ReviewPage() {
   console.log('Rendering ReviewPage with resumeData:', resumeData);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#18181b] via-[#101014] to-[#23232a] p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#18181b] via-[#101014] to-[#23232a] p-4 pt-24">
       <div className="max-w-4xl mx-auto">
         <MotionCard
-          className="w-full border-none bg-[#18181b]/90 rounded-2xl shadow-2xl backdrop-blur-md pt-14"
+          className="w-full border-none bg-[#18181b]/90 rounded-2xl shadow-2xl backdrop-blur-md"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
