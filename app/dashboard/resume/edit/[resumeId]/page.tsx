@@ -519,7 +519,9 @@ export default function EditResumePage({ params }: { params: { resumeId: string 
   const handleDownload = async () => {
     if (!resume) return;
     try {
-      const response = await fetch('/api/generate-resume-pdf', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.HF_API_URL;
+      console.log('Calling Hugging Face API to generate resume PDF...');
+      const response = await fetch(`${apiUrl}/generate-resume-pdf`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
