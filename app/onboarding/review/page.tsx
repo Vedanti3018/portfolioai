@@ -598,7 +598,7 @@ export default function ReviewPage() {
                       <label className="block text-sm font-medium text-gray-300 mb-1">Technical Skills</label>
                       <Input
                         type="text"
-                        value={resumeData.professional_info.skills.technical_skills.join(', ')}
+                        value={(resumeData.professional_info.skills.technical_skills || []).join(', ')}
                         onChange={(e) => handleInputChange('professional_info.skills', 'technical_skills', e.target.value.split(',').map(s => s.trim()))}
                         className="bg-[#23232a] border border-white/10 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
                       />
@@ -607,7 +607,7 @@ export default function ReviewPage() {
                       <label className="block text-sm font-medium text-gray-300 mb-1">Soft Skills</label>
                       <Input
                         type="text"
-                        value={resumeData.professional_info.skills.soft_skills.join(', ')}
+                        value={(resumeData.professional_info.skills.soft_skills || []).join(', ')}
                         onChange={(e) => handleInputChange('professional_info.skills', 'soft_skills', e.target.value.split(',').map(s => s.trim()))}
                         className="bg-[#23232a] border border-white/10 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
                       />
@@ -616,7 +616,7 @@ export default function ReviewPage() {
                       <label className="block text-sm font-medium text-gray-300 mb-1">Languages</label>
                       <Input
                         type="text"
-                        value={resumeData.professional_info.skills.languages.join(', ')}
+                        value={(resumeData.professional_info.skills.languages || []).join(', ')}
                         onChange={(e) => handleInputChange('professional_info.skills', 'languages', e.target.value.split(',').map(s => s.trim()))}
                         className="bg-[#23232a] border border-white/10 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
                       />
@@ -660,7 +660,7 @@ export default function ReviewPage() {
                           <label className="block text-sm font-medium text-gray-300 mb-1">Technologies</label>
                           <Input
                             type="text"
-                            value={project.technologies.join(', ')}
+                            value={(project.technologies || []).join(', ')}
                             onChange={(e) => handleInputChange('professional_info.projects', 'technologies', e.target.value.split(',').map(s => s.trim()), index)}
                             className="bg-[#23232a] border border-white/10 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
                           />
