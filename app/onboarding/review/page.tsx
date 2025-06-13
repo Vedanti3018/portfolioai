@@ -91,24 +91,25 @@ export default function ReviewPage() {
         }
 
         // Transform the data into the expected structure
+        const draft = data.parsed_data[0];
         const transformedData = {
           basic_info: {
-            name: data.parsed_data.personal?.name || null,
-            email: data.parsed_data.personal?.email || null,
-            phone: data.parsed_data.personal?.phone || null,
-            country: data.parsed_data.personal?.location || null,
-            education: data.parsed_data.education || []
+            name: draft.personal?.name || null,
+            email: draft.personal?.email || null,
+            phone: draft.personal?.phone || null,
+            country: draft.personal?.location || null,
+            education: draft.education || []
           },
           professional_info: {
-            current_designation: data.parsed_data.personal?.title || null,
+            current_designation: draft.personal?.title || null,
             skills: {
-              technical_skills: data.parsed_data.skills || [],
+              technical_skills: draft.skills || [],
               soft_skills: [],
               languages: []
             },
-            experience: data.parsed_data.experience || [],
-            certifications: data.parsed_data.certifications || [],
-            projects: data.parsed_data.projects || [],
+            experience: draft.experience || [],
+            certifications: draft.certifications || [],
+            projects: draft.projects || [],
             linkedin_url: null,
             portfolio_url: null,
             resume_url: null
