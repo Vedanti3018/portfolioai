@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/ssr';
 
 export default function OptimizerPage() {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
@@ -18,7 +18,10 @@ export default function OptimizerPage() {
   const [suggestions, setSuggestions] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const supabase = createClientComponentClient();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
