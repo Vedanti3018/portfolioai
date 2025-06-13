@@ -173,6 +173,11 @@ export default function EditResumePage({ params }: { params: { resumeId: string 
             processedContent = resumeData.content;
           }
 
+          // Handle content if it's an array
+          if (Array.isArray(processedContent)) {
+            processedContent = processedContent[0]; // Take the first item if it's an array
+          }
+
           // Ensure all required fields exist with default values
           processedContent = {
             personal: {
@@ -190,6 +195,8 @@ export default function EditResumePage({ params }: { params: { resumeId: string 
             certifications: Array.isArray(processedContent?.certifications) ? processedContent.certifications : [],
             awards: Array.isArray(processedContent?.awards) ? processedContent.awards : []
           };
+
+          console.log('Processed resume content:', processedContent);
         } catch (parseError) {
           console.error('Error parsing resume content:', parseError);
           processedContent = defaultResumeContent;
@@ -200,11 +207,12 @@ export default function EditResumePage({ params }: { params: { resumeId: string 
           content: processedContent
         };
 
-        console.log('Processed resume content:', {
+        console.log('Rendering resume with data:', {
+          title: processedResume.title,
+          hasContent: true,
           personal: processedResume.content.personal,
           experience: processedResume.content.experience,
-          education: processedResume.content.education,
-          skills: processedResume.content.skills
+          education: processedResume.content.education
         });
 
         setResume(processedResume);
