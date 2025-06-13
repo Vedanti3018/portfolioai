@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Sparkles, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/ssr';
 import { useRouter } from 'next/navigation';
 import jsPDF from 'jspdf';
 
@@ -18,7 +18,10 @@ export default function CoverLettersPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resumeText, setResumeText] = useState(''); // For future: select from existing resumes
-  const supabase = createClientComponentClient();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   const router = useRouter();
   const [profile, setProfile] = useState<any>(null);
   const [editMode, setEditMode] = useState(false);

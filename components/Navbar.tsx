@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/ssr';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { LogOut, User, Settings, CreditCard } from 'lucide-react';
@@ -33,7 +33,10 @@ interface NavbarProps {
 export default function Navbar({ showAuthButtons = true }: NavbarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const supabase = createClientComponentClient();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
