@@ -49,7 +49,7 @@ const features = [
     title: 'Skill Gap Analyzer',
     description:
       'Identify areas for improvement and receive personalized recommendations to enhance your profile.',
-    image: '/images/skill-gap-sample.jpg',
+    image: '/images/skill.jpg',
     imageFirst: false,
   },
 ];
@@ -358,7 +358,7 @@ export default function Home() {
           viewport={{ once: true }}
         >
           <Image
-            src="/images/how-it-works-sample.jpg"
+            src="/images/how_it.png"
             alt="How It Works"
             width={500}
             height={500}
